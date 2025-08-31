@@ -1,1 +1,0 @@
-gunicorn project.wsgi:application --chdir project_root
