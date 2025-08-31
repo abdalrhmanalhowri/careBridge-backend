@@ -35,7 +35,7 @@ def elder_list(request):
                 'age': elder.age,
                 'gender': elder.gender,
                 'city': elder.city,
-                'health_status': health_percent,
+                'health_status':health_percent,
             })
         return Response(elders_data)
 
