@@ -1,1 +1,1 @@
-web: gunicorn careBridge_backend.wsgi
+web: gunicorn project.wsgi
