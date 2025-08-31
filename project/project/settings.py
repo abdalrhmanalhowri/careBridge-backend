@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-0$!e7@5mei0^$zh*xyeg#hz=@1691v!er)r=dbw4&(^-pbypc#
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["carebridge-backend-bp1p.onrender.com","http://localhost:5173"]
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
