@@ -31,7 +31,4 @@ urlpatterns = [
 
     # الإحصائيات
     path('data/', views.get_data, name='get-data'),
-
-    path('volunteers/', views.VolunteerList.as_view(), name='volunteer-list'),
-    path('volunteers/<int:pk>/', views.VolunteerDetail.as_view(), name='volunteer-detail'),
 ]
