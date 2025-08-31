@@ -19,7 +19,7 @@ def register_volunteer(request):
 
 #جدول كبار السن
 @api_view(['GET', 'POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def elder_list(request):
     if request.method == 'GET':
         elders = Elder.objects.all()
