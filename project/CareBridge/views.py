@@ -19,18 +19,33 @@ def register_volunteer(request):
 
 #جدول كبار السن
 @api_view(['GET', 'POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def elder_list(request):
     if request.method == 'GET':
+        elders_data = []
         elders = Elder.objects.all()
-        serializer = ElderSerializer(elders, many=True)
-        return Response(serializer.data)
+        for elder in elders:
+            # الحصول على آخر زيارة لكبير السن
+            last_visit = Visit.objects.filter(elder=elder).order_by('-visit_date').first()
+            health_percent = last_visit.general_status_percent if last_visit else None
+
+            elders_data.append({
+                'id': elder.id,
+                'name': elder.name,
+                'age': elder.age,
+                'gender': elder.gender,
+                'city': elder.city,
+                'health_status': health_percent,
+            })
+        return Response(elders_data)
+
     elif request.method == 'POST':
         serializer = ElderSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 @api_view(['GET', 'PUT', 'PATCH', 'DELETE'])
 @permission_classes([IsAuthenticated])

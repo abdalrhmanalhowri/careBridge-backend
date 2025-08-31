@@ -40,6 +40,7 @@ class CountDataSerializer(serializers.Serializer):
     visit_count = serializers.IntegerField()
 
 class RegisterSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(required=True)
     name = serializers.CharField(max_length=100)
     age = serializers.IntegerField()
     city = serializers.CharField(max_length=100)
@@ -50,19 +51,18 @@ class RegisterSerializer(serializers.ModelSerializer):
     agreed_terms = serializers.BooleanField()
     commitment_statement = serializers.BooleanField()
     is_approved = serializers.BooleanField(default=False)
-    is_admin = serializers.BooleanField(default=False)
 
     class Meta:
         model = User
         fields = ['username', 'email', 'password', 'name', 'age', 'city', 'job_title',
                   'gender', 'marital_status', 'resume', 'agreed_terms',
-                  'commitment_statement', 'is_approved', 'is_admin']
+                  'commitment_statement', 'is_approved']
 
     def create(self, validated_data):
         volunteer_data = {
             key: validated_data.pop(key)
             for key in ['name', 'age', 'city', 'job_title', 'gender', 'marital_status',
-                        'resume', 'agreed_terms', 'commitment_statement', 'is_approved', 'is_admin']
+                        'resume', 'agreed_terms', 'commitment_statement', 'is_approved']
         }
         user = User.objects.create_user(
             username=validated_data['username'],

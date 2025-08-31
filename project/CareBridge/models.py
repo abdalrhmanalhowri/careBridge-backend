@@ -45,7 +45,6 @@ class Volunteer(models.Model):
     agreed_terms = models.BooleanField(default=False)
     commitment_statement = models.BooleanField(default=False)
     is_approved = models.BooleanField(default=False)
-    is_admin = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.name} – User: {self.user.username}"
