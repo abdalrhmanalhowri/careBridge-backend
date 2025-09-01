@@ -57,15 +57,23 @@ class RegisterSerializer(serializers.ModelSerializer):
         fields = ['username', 'email', 'password', 'name', 'age', 'city', 'job_title',
                   'gender', 'marital_status', 'resume', 'agreed_terms',
                   'commitment_statement', 'is_approved']
-
+    
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("هذا البريد مستخدم سابقًا.")
+        return value
+        
     def create(self, validated_data):
         volunteer_data = {
             key: validated_data.pop(key)
             for key in ['name', 'age', 'city', 'job_title', 'gender', 'marital_status',
                         'resume', 'agreed_terms', 'commitment_statement', 'is_approved']
         }
+
+        username = validated_data.get('username') or validated_data['email']
+        
         user = User.objects.create_user(
-            username=validated_data['username'],
+            username=username,
             email=validated_data['email'],
             password=validated_data['password']
         )

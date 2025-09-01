@@ -13,8 +13,8 @@ from .serializers import *
 def register_volunteer(request):
     serializer = RegisterSerializer(data=request.data)
     if serializer.is_valid():
-        serializer.save()
-        return Response({'message': 'تم إنشاء الحساب بنجاح'}, status=status.HTTP_201_CREATED)
+        user = serializer.save() 
+        return Response({'message': 'تم إنشاء الحساب بنجاح', 'user_id': user.id}, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 #جدول كبار السن
