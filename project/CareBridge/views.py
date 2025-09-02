@@ -1,5 +1,5 @@
 from django.shortcuts import get_object_or_404
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes , parser_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework import status
@@ -8,6 +8,8 @@ from django.contrib.auth.models import User
 from .models import *
 from .serializers import *
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.parsers import MultiPartParser, FormParser 
+
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -267,5 +269,17 @@ def get_data(request):
     return Response(serializer.data)
     
 
-
+# الصورة الشخصية
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+@parser_classes([MultiPartParser, FormParser])
+def upload_avatar(request):
+    volunteer = request.user.volunteer 
+    file_obj = request.data.get('image')
     
+    if not file_obj:
+        return Response({"error": "No file provided"}, status=status.HTTP_400_BAD_REQUEST)
+
+    volunteer.image = file_obj  
+    volunteer.save()
+    return Response({"message": "Avatar updated successfully"})
