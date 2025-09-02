@@ -8,7 +8,7 @@ class ElderSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class VolunteerSerializer(serializers.ModelSerializer):
-    user = serializers.StringRelatedField(read_only=True)
+    user = serializers.PrimaryKeyRelatedField(read_only=True)
     class Meta:
         model = Volunteer
         fields = '__all__'
@@ -53,31 +53,34 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['email', 'password', 'name', 'age', 'city', 'job_title',
-              'gender', 'marital_status', 'resume', 'agreed_terms',
-              'commitment_statement']
+        fields = [
+            'email', 'password', 'name', 'age', 'city', 'job_title',
+            'gender', 'marital_status', 'resume', 'agreed_terms',
+            'commitment_statement'
+        ]
+        extra_kwargs = {
+            'password': {'write_only': True},  # نخلي الباسورد للإنشاء فقط
+        }
 
-    
     def validate_email(self, value):
         if User.objects.filter(email=value).exists():
             raise serializers.ValidationError("هذا البريد مستخدم سابقًا.")
         return value
-        
+
     def create(self, validated_data):
         volunteer_data = {
-        key: validated_data.pop(key)
-        for key in ['name', 'age', 'city', 'job_title', 'gender', 'marital_status',
-                    'resume', 'agreed_terms', 'commitment_statement']
+            key: validated_data.pop(key)
+            for key in [
+                'name', 'age', 'city', 'job_title', 'gender', 'marital_status',
+                'resume', 'agreed_terms', 'commitment_statement'
+            ]
         }
 
         email = validated_data['email']
         user = User.objects.create_user(
-        username=email, 
-        email=email,
-        password=validated_data['password']
+            username=email,
+            email=email,
+            password=validated_data['password']
         )
         Volunteer.objects.create(user=user, **volunteer_data)
         return user
-
-    
-    

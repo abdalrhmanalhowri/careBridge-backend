@@ -25,7 +25,6 @@ def elder_list(request):
         elders_data = []
         elders = Elder.objects.all()
         for elder in elders:
-            # الحصول على آخر زيارة لكبير السن
             last_visit = Visit.objects.filter(elder=elder).order_by('-visit_date').first()
             health_percent = last_visit.general_status_percent if last_visit else None
 
@@ -38,6 +37,19 @@ def elder_list(request):
                 'health_status':health_percent,
             })
         return Response(elders_data)
+
+    elif request.method == 'POST':
+        # 🔹 خلي الإدخال فقط للـ authenticated users
+        if not request.user.is_authenticated:
+            return Response(
+                {'detail': 'يجب تسجيل الدخول لإضافة كبير السن.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        serializer = ElderSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     elif request.method == 'POST':
         serializer = ElderSerializer(data=request.data)
@@ -233,8 +245,8 @@ def notification_detail(request, pk):
 @permission_classes([IsAuthenticated])
 def get_data(request):
     elders_count_view= Elder.objects.count()
-    volunteer_count_viwe= Elder.objects.count()
-    Visit_count_view= Elder.objects.count()
+    volunteer_count_viwe= Volunteer.objects.count()
+    Visit_count_view= Visit.objects.count()
 
     count_data={'elder_count':elders_count_view,
                 'volunteer_count':volunteer_count_viwe,

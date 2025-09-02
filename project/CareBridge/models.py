@@ -1,6 +1,14 @@
 from django.db import models
-from django.contrib.auth.models import User
-from django.contrib.auth.hashers import make_password, check_password
+from django.contrib.auth.models import AbstractUser
+
+
+class User(AbstractUser):
+    ROLE_CHOICES = (
+        ('admin', 'Admin'),
+        ('volunteer', 'Volunteer'),
+    )
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='volunteer')
+    email = models.EmailField(unique=True)
 
 # جدول كبار السن
 class Elder(models.Model):
@@ -9,7 +17,7 @@ class Elder(models.Model):
     age = models.PositiveIntegerField()
     gender = models.CharField(max_length=20)
     city = models.CharField(max_length=100)
-    health_status = models.TextField()
+    health_status = models.CharField(max_length=10, blank=True, null=True)
     children_count = models.PositiveIntegerField()
     financial_status = models.CharField(max_length=30)
     special_needs = models.TextField()
@@ -22,7 +30,7 @@ class Elder(models.Model):
 
 # جدول المتطوعين (مرتبط بـ User)
 class Volunteer(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, default=1)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
     age = models.PositiveIntegerField()
     city = models.CharField(max_length=100)
@@ -133,6 +141,11 @@ class Visit(models.Model):
             self.submitted_at = timezone.now()
         super().save(*args, **kwargs)
 
+        if self.general_status_percent:
+            elder = self.elder
+            elder.health_status = str(self.general_status_percent) 
+            elder.save(update_fields=['health_status'])
+
 
 # جدول التحاليل
 class Analysis(models.Model):
@@ -164,11 +177,14 @@ class Notification(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     read_at = models.DateTimeField(null=True, blank=True)
 
+    class Meta:
+        ordering = ['-created_at'] 
+
     def __str__(self):
         return f"إشعار للمتطوع {self.volunteer.name}"
     
 
-class count_data:
-    elder_count =0 
-    volunteer_count=0
-    visit_count=0
+# class count_data:
+#     elder_count =0 
+#     volunteer_count=0
+#     visit_count=0
