@@ -232,9 +232,9 @@ def notification_detail(request, pk):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_data(request):
-    elders_count_view= Elder.objects.all().count()
-    volunteer_count_viwe= Elder.objects.all().count()
-    Visit_count_view= Elder.objects.all().count()
+    elders_count_view= Elder.objects.count()
+    volunteer_count_viwe= Elder.objects.count()
+    Visit_count_view= Elder.objects.count()
 
     count_data={'elder_count':elders_count_view,
                 'volunteer_count':volunteer_count_viwe,

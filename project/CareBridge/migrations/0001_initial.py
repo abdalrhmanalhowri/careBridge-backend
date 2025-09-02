@@ -42,7 +42,6 @@ class Migration(migrations.Migration):
                 ('resume', models.FileField(upload_to='volunteer_resumes/')),
                 ('agreed_terms', models.BooleanField(default=False)),
                 ('commitment_statement', models.BooleanField(default=False)),
-                ('is_approved', models.BooleanField(default=False)),
                 ('is_admin', models.BooleanField(default=False)),
             ],
         ),

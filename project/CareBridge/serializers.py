@@ -50,13 +50,13 @@ class RegisterSerializer(serializers.ModelSerializer):
     resume = serializers.FileField()
     agreed_terms = serializers.BooleanField()
     commitment_statement = serializers.BooleanField()
-    is_approved = serializers.BooleanField(default=False)
 
     class Meta:
         model = User
-        fields = ['username', 'email', 'password', 'name', 'age', 'city', 'job_title',
-                  'gender', 'marital_status', 'resume', 'agreed_terms',
-                  'commitment_statement', 'is_approved']
+        fields = ['email', 'password', 'name', 'age', 'city', 'job_title',
+              'gender', 'marital_status', 'resume', 'agreed_terms',
+              'commitment_statement']
+
     
     def validate_email(self, value):
         if User.objects.filter(email=value).exists():
@@ -65,19 +65,19 @@ class RegisterSerializer(serializers.ModelSerializer):
         
     def create(self, validated_data):
         volunteer_data = {
-            key: validated_data.pop(key)
-            for key in ['name', 'age', 'city', 'job_title', 'gender', 'marital_status',
-                        'resume', 'agreed_terms', 'commitment_statement', 'is_approved']
+        key: validated_data.pop(key)
+        for key in ['name', 'age', 'city', 'job_title', 'gender', 'marital_status',
+                    'resume', 'agreed_terms', 'commitment_statement']
         }
 
-        username = validated_data.get('username') or validated_data['email']
-        
+        email = validated_data['email']
         user = User.objects.create_user(
-            username=username,
-            email=validated_data['email'],
-            password=validated_data['password']
+        username=email, 
+        email=email,
+        password=validated_data['password']
         )
         Volunteer.objects.create(user=user, **volunteer_data)
         return user
+
     
     

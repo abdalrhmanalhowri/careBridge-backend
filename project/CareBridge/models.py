@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.contrib.auth.hashers import make_password, check_password
 
 # جدول كبار السن
 class Elder(models.Model):
@@ -13,6 +14,7 @@ class Elder(models.Model):
     financial_status = models.CharField(max_length=30)
     special_needs = models.TextField()
     phone = models.CharField(max_length=20)
+    image = models.ImageField(upload_to='images/', null=True, blank=True)
 
     def __str__(self):
         return f"{self.id} – {self.name}"
@@ -25,6 +27,7 @@ class Volunteer(models.Model):
     age = models.PositiveIntegerField()
     city = models.CharField(max_length=100)
     job_title = models.CharField(max_length=100)
+    image = models.ImageField(upload_to='images/', null=True, blank=True)
 
     gender = models.CharField(
         max_length=10,
@@ -44,11 +47,12 @@ class Volunteer(models.Model):
     resume = models.FileField(upload_to='volunteer_resumes/')
     agreed_terms = models.BooleanField(default=False)
     commitment_statement = models.BooleanField(default=False)
-    is_approved = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    last_login = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.name} – User: {self.user.username}"
-
 
 # جدول الزيارات
 class Visit(models.Model):
