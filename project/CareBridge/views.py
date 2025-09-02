@@ -7,14 +7,25 @@ from django.utils import timezone
 from django.contrib.auth.models import User
 from .models import *
 from .serializers import *
+from rest_framework_simplejwt.tokens import RefreshToken
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def register_volunteer(request):
     serializer = RegisterSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    user = serializer.save()
+
+    refresh = RefreshToken.for_user(user)
+    
     if serializer.is_valid():
         user = serializer.save() 
-        return Response({'message': 'تم إنشاء الحساب بنجاح', 'user_id': user.id}, status=status.HTTP_201_CREATED)
+        return Response({
+            "message": "تم إنشاء الحساب بنجاح",
+            "user_id": user.id,
+            "access": str(refresh.access_token),
+            "refresh": str(refresh)
+        }, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 #جدول كبار السن

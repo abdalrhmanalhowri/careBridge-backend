@@ -30,7 +30,7 @@ class Elder(models.Model):
 
 # جدول المتطوعين (مرتبط بـ User)
 class Volunteer(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE , related_name="volunteer")
     name = models.CharField(max_length=100)
     age = models.PositiveIntegerField()
     city = models.CharField(max_length=100)
