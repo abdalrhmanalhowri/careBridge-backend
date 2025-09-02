@@ -270,16 +270,24 @@ def get_data(request):
     
 
 # الصورة الشخصية
-@api_view(['POST'])
+@api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
 @parser_classes([MultiPartParser, FormParser])
-def upload_avatar(request):
-    volunteer = request.user.volunteer 
-    file_obj = request.data.get('image')
-    
-    if not file_obj:
-        return Response({"error": "No file provided"}, status=status.HTTP_400_BAD_REQUEST)
+def avatar_view(request):
+    volunteer = request.user.volunteer  
 
-    volunteer.image = file_obj  
-    volunteer.save()
-    return Response({"message": "Avatar updated successfully"})
+    # جلب الصورة
+    if request.method == 'GET':
+        if not volunteer.image:
+            return Response({"error": "No avatar found"}, status=status.HTTP_404_NOT_FOUND)
+        return Response({"image": request.build_absolute_uri(volunteer.image.url)})
+
+    # رفع/تحديث الصورة
+    if request.method == 'POST':
+        file_obj = request.data.get('image')
+        if not file_obj:
+            return Response({"error": "No file provided"}, status=status.HTTP_400_BAD_REQUEST)
+
+        volunteer.image = file_obj  
+        volunteer.save()
+        return Response({"message": "Avatar updated successfully"})
