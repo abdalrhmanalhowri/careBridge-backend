@@ -322,3 +322,15 @@ def avatar_view(request):
         volunteer.image = file_obj  # CloudinaryField سيقوم بالرفع تلقائيًا
         volunteer.save()
         return Response({"message": "Avatar updated successfully", "image_url": volunteer.image.url})
+    
+
+def create_superuser(request):
+    User = get_user_model()
+    if not User.objects.filter(username='admin').exists():
+        User.objects.create_superuser(
+            username='admin', 
+            email='admin@example.com', 
+            password='SuperStrongPassword123'
+        )
+        return Response({"message": "Superuser created successfully!"})
+    return Response({"message": "Superuser already exists."})

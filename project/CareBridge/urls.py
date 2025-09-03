@@ -37,4 +37,7 @@ urlpatterns = [
 
     # الصورة الشخصية
     path('volunteer/avatar/', views.avatar_view, name='volunteer-avatar'),
+
+    # انشاء ادمن 
+    path('create-superuser/', views.create_superuser, name='create_superuser'),
 ]
