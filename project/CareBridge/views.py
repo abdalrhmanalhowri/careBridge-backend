@@ -269,20 +269,39 @@ def notification_list(request):
     serializer = NotificationSerializer(notifications, many=True)
     return Response(serializer.data)
 
-@api_view(['GET'])
+# @api_view(['GET'])
+# @permission_classes([IsAuthenticated])
+# def notification_detail(request, pk):
+#     try:
+#         volunteer = Volunteer.objects.get(user=request.user)
+#     except Volunteer.DoesNotExist:
+#         return Response({'message': 'لا يوجد متطوع مرتبط بهذا المستخدم.'}, status=status.HTTP_404_NOT_FOUND)
+#     notification = get_object_or_404(Notification, pk=pk, volunteer=volunteer)
+#     if not notification.is_read:
+#         notification.is_read = True
+#         notification.read_at = timezone.now()
+#         notification.save()
+#     serializer = NotificationSerializer(notification)
+#     return Response(serializer.data)
+
+# قراءة الاشعار 
+@api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def notification_detail(request, pk):
+def mark_notification_as_read(request, pk):
     try:
         volunteer = Volunteer.objects.get(user=request.user)
     except Volunteer.DoesNotExist:
         return Response({'message': 'لا يوجد متطوع مرتبط بهذا المستخدم.'}, status=status.HTTP_404_NOT_FOUND)
+
     notification = get_object_or_404(Notification, pk=pk, volunteer=volunteer)
+
     if not notification.is_read:
         notification.is_read = True
         notification.read_at = timezone.now()
         notification.save()
-    serializer = NotificationSerializer(notification)
-    return Response(serializer.data)
+
+    return Response({'message': 'تم تحديد الإشعار كمقروء.', 'read_at': notification.read_at})
+
 
 #الاحصائيات
 @api_view(['GET'])

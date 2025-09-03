@@ -173,6 +173,7 @@ class Medication(models.Model):
 class Notification(models.Model):
     id = models.AutoField(primary_key=True)
     volunteer = models.ForeignKey(Volunteer, on_delete=models.CASCADE)
+    title = models.TextField(default="لديك زيارة جديدة !")
     message_text = models.TextField()
     is_read = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)

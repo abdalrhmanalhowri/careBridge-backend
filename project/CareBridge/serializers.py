@@ -63,7 +63,7 @@ class NotificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notification
         fields = '__all__'
-        read_only_fields = ['is_read', 'read_at']
+        read_only_fields = ['is_read', 'read_at', 'created_at']
 
 class CountDataSerializer(serializers.Serializer):
     elder_count = serializers.IntegerField()
