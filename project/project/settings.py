@@ -87,24 +87,15 @@ WSGI_APPLICATION = 'project.wsgi.application'
 
 
 
-DATABASE_URL = os.getenv("DATABASE_URL")  # هذا متغير البيئة على Render
+# DATABASE_URL = os.getenv("DATABASE_URL")  # هذا متغير البيئة على Render
 
-if DATABASE_URL:
-    DATABASES = {
-        'default': dj_database_url.config(
-            default=DATABASE_URL,
-            conn_max_age=600,
-            ssl_require=True
-        )
+# if DATABASE_URL:
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
-else:
-    # قاعدة بيانات SQLite للتطوير المحلي
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
