@@ -1,6 +1,8 @@
 from rest_framework import serializers
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from .models import *
+
+User = get_user_model()
 
 class ElderSerializer(serializers.ModelSerializer):
     class Meta:
@@ -85,8 +87,10 @@ class RegisterSerializer(serializers.ModelSerializer):
             ]
         }
 
+        userEmail = validated_data['email']
         u = User.objects.create_user(
-            email=validated_data['email'],
+            username=userEmail,
+            email=userEmail,
             password=validated_data['password']
         )
         u.is_active = True

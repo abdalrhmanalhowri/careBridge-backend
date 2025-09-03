@@ -4,13 +4,15 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework import status
 from django.utils import timezone
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from .models import *
 from .serializers import *
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.parsers import MultiPartParser, FormParser 
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
+
+User = get_user_model()
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -22,7 +24,6 @@ def register_volunteer(request):
     refresh = RefreshToken.for_user(user)
     
     if serializer.is_valid():
-        user = serializer.save() 
         return Response({
             "message": "تم إنشاء الحساب بنجاح",
             "user_id": user.id,
@@ -41,7 +42,7 @@ def login_volunteer(request):
     if not email or not password:
         return Response({"detail": "الرجاء إدخال الايميل وكلمة المرور."}, status=status.HTTP_400_BAD_REQUEST)
 
-    user = authenticate(request, email=email, password=password)
+    user = authenticate(request, username=email, password=password)
 
     if user is None:
         return Response({"detail": "الايميل أو كلمة المرور غير صحيحة."}, status=status.HTTP_401_UNAUTHORIZED)
