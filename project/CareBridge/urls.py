@@ -5,6 +5,8 @@ urlpatterns = [
     # تسجيل متطوع جديد
     path('register/', views.register_volunteer, name='register-volunteer'),
 
+    #  تسجيل الدخول 
+    path("login/", views.login_volunteer, name="login"),
     # كبار السن
     path('elders/', views.elder_list, name='elder-list'),
     path('elders/<int:pk>/', views.elder_detail, name='elder-detail'),

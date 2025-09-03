@@ -9,9 +9,18 @@ class ElderSerializer(serializers.ModelSerializer):
 
 class VolunteerSerializer(serializers.ModelSerializer):
     user = serializers.PrimaryKeyRelatedField(read_only=True)
+    email = serializers.EmailField(source="user.email", read_only=True)
+
     class Meta:
         model = Volunteer
         fields = '__all__'
+        extra_fields = ['email']
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['email'] = instance.user.email
+        return representation
+
 
 class VisitSerializer(serializers.ModelSerializer):
     class Meta:
