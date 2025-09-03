@@ -85,10 +85,8 @@ class RegisterSerializer(serializers.ModelSerializer):
             ]
         }
 
-        userEmail = validated_data['email']
         u = User.objects.create_user(
-            username=userEmail,
-            email=userEmail,
+            email=validated_data['email'],
             password=validated_data['password']
         )
         u.is_active = True
