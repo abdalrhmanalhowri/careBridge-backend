@@ -87,7 +87,7 @@ def elder_list(request):
         if not request.user.is_authenticated:
             return Response(
                 {'detail': 'يجب تسجيل الدخول لإضافة كبير السن.'},
-                status=status.HTTP_403_FORBIDDEN
+                status=status.HTTP_401_UNAUTHORIZED
             )
         serializer = ElderSerializer(data=request.data)
         if serializer.is_valid():
