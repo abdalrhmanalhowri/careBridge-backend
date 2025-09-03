@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-
+from cloudinary.models import CloudinaryField
 
 class User(AbstractUser):
     ROLE_CHOICES = (
@@ -25,7 +25,7 @@ class Elder(models.Model):
     financial_status = models.CharField(max_length=30)
     special_needs = models.TextField()
     phone = models.CharField(max_length=20)
-    image = models.ImageField(upload_to='images/', null=True, blank=True)
+    image = CloudinaryField('image', blank=True, null=True)
 
     def __str__(self):
         return f"{self.id} – {self.name}"
@@ -38,7 +38,7 @@ class Volunteer(models.Model):
     age = models.PositiveIntegerField()
     city = models.CharField(max_length=100)
     job_title = models.CharField(max_length=100)
-    image = models.ImageField(upload_to='images/', null=True, blank=True)
+    image = CloudinaryField('image', blank=True, null=True)
 
     gender = models.CharField(
         max_length=10,
@@ -55,7 +55,7 @@ class Volunteer(models.Model):
             ('آخر', 'آخر'),
         ]
     )
-    resume = models.FileField(upload_to='volunteer_resumes/')
+    resume = CloudinaryField('file', resource_type='raw', blank=True, null=True)
     agreed_terms = models.BooleanField(default=False)
     commitment_statement = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)

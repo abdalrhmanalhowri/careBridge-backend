@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from pathlib import Path
 import os
 import dj_database_url
+import cloudinary
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -157,3 +158,11 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'CareBridge.User'
+
+# 1. الإعدادات
+cloudinary.config( 
+    cloud_name = "ds4poikxh", 
+    api_key = "274814477681346", 
+    api_secret = "_zSbEetCCxe8ySGqB3aEUq6UMX4", 
+    secure=True
+)

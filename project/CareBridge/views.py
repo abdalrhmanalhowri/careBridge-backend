@@ -305,7 +305,7 @@ def get_data(request):
 @permission_classes([IsAuthenticated])
 @parser_classes([MultiPartParser, FormParser])
 def avatar_view(request):
-    volunteer = request.user.volunteer  
+    volunteer = request.user.volunteer
 
     # جلب الصورة
     if request.method == 'GET':
@@ -319,6 +319,6 @@ def avatar_view(request):
         if not file_obj:
             return Response({"error": "No file provided"}, status=status.HTTP_400_BAD_REQUEST)
 
-        volunteer.image = file_obj  
+        volunteer.image = file_obj  # CloudinaryField سيقوم بالرفع تلقائيًا
         volunteer.save()
-        return Response({"message": "Avatar updated successfully"})
+        return Response({"message": "Avatar updated successfully", "image_url": volunteer.image.url})

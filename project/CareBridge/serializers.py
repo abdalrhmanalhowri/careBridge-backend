@@ -8,15 +8,35 @@ class ElderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Elder
         fields = '__all__'
+    
+    def get_avatar_url(self, obj):
+        if obj.image:
+            request = self.context.get('request')
+            return request.build_absolute_uri(obj.image.url) if request else obj.image.url
+        return None
 
 class VolunteerSerializer(serializers.ModelSerializer):
     user = serializers.PrimaryKeyRelatedField(read_only=True)
     email = serializers.EmailField(source="user.email", read_only=True)
+    image_url = serializers.SerializerMethodField()
+    cv_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Volunteer
-        fields = '__all__'
+        fields = '__all__'  # جميع الحقول
         extra_fields = ['email']
+
+    def get_image_url(self, obj):
+        if obj.image:
+            request = self.context.get('request')
+            return request.build_absolute_uri(obj.image.url) if request else obj.image.url
+        return None
+
+    def get_cv_url(self, obj):
+        if obj.resume:
+            request = self.context.get('request')
+            return request.build_absolute_uri(obj.resume.url) if request else obj.resume.url
+        return None
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
