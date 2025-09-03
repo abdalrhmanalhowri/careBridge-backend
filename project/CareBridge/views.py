@@ -323,13 +323,14 @@ def avatar_view(request):
         volunteer.save()
         return Response({"message": "Avatar updated successfully", "image_url": volunteer.image.url})
     
-
+@api_view(['GET'])
+@permission_classes([AllowAny])
 def create_superuser(request):
     User = get_user_model()
     if not User.objects.filter(username='admin').exists():
         User.objects.create_superuser(
-            username='admin', 
-            email='admin@example.com', 
+            username='admin',
+            email='admin@example.com',
             password='SuperStrongPassword123'
         )
         return Response({"message": "Superuser created successfully!"})
