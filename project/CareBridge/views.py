@@ -41,7 +41,7 @@ def login_volunteer(request):
     if not email or not password:
         return Response({"detail": "الرجاء إدخال الايميل وكلمة المرور."}, status=status.HTTP_400_BAD_REQUEST)
 
-    user = authenticate(request, email=email, password=password)
+    user = authenticate(request, username=email, password=password)
 
     if user is None:
         return Response({"detail": "الايميل أو كلمة المرور غير صحيحة."}, status=status.HTTP_401_UNAUTHORIZED)

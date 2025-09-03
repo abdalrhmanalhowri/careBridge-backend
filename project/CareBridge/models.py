@@ -10,9 +10,6 @@ class User(AbstractUser):
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='volunteer')
     email = models.EmailField(unique=True)
 
-    USERNAME_FIELD = "email"   # ← تسجيل الدخول رح يكون بالايميل
-    REQUIRED_FIELDS = []       # ← ما رح يطلب منك username عند الإنشاء
-
 # جدول كبار السن
 class Elder(models.Model):
     id = models.AutoField(primary_key=True)
@@ -184,6 +181,7 @@ class Notification(models.Model):
     def __str__(self):
         return f"إشعار للمتطوع {self.volunteer.name}"
     
+
 
 # class count_data:
 #     elder_count =0 
