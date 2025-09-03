@@ -55,8 +55,6 @@ class Volunteer(models.Model):
     resume = models.FileField(upload_to='volunteer_resumes/')
     agreed_terms = models.BooleanField(default=False)
     commitment_statement = models.BooleanField(default=False)
-    is_active = models.BooleanField(default=True)
-    last_login = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
