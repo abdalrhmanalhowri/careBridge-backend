@@ -33,4 +33,8 @@ urlpatterns = [
 
     # الإحصائيات
     path('data/', views.get_data, name='get-data'),
+
+
+    # الصورة الشخصية
+    path('volunteer/avatar/', views.avatar_view, name='volunteer-avatar'),
 ]
