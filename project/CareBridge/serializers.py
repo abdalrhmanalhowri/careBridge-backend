@@ -47,7 +47,14 @@ class VolunteerSerializer(serializers.ModelSerializer):
 class VisitSerializer(serializers.ModelSerializer):
     class Meta:
         model = Visit
-        fields = '__all__'
+        fields = [
+            'visit_id',
+            'elder',
+            'volunteer',
+            'visit_date',
+            'status',
+            'created_at',
+        ]
 
 class AnalysisSerializer(serializers.ModelSerializer):
     class Meta:
@@ -58,6 +65,33 @@ class MedicationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Medication
         fields = '__all__'
+
+class VisitReportSerializer(serializers.ModelSerializer):
+    analyses = AnalysisSerializer(many=True, read_only=True, source='analysis_set')
+    medications = MedicationSerializer(many=True, read_only=True, source='medication_set')
+
+    class Meta:
+        model = Visit
+        fields = [
+            'visit_id',
+            'heart_rate',
+            'blood_pressure',
+            'oxygen_level',
+            'blood_sugar',
+            'general_health_status',
+            'health_notes',
+            'medical_need',
+            'psych_status',
+            'social_status',
+            'additional_notes',
+            'living_need',
+            'support_need',
+            'general_status_percent',
+            'submitted_at',
+            'analyses',
+            'medications',
+        ]
+
 
 class NotificationSerializer(serializers.ModelSerializer):
     class Meta:

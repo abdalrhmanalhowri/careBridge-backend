@@ -168,11 +168,17 @@ def visit_list(request):
         visits = Visit.objects.all()
         serializer = VisitSerializer(visits, many=True)
         return Response(serializer.data)
+    
     elif request.method == 'POST':
         serializer = VisitSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+                visit = serializer.save()
+                # إنشاء إشعار تلقائي للمتطوع
+                Notification.objects.create(
+                    volunteer=visit.volunteer,
+                    message_text=f"تم تكليفك بزيارة جديدة للمسن {visit.elder.name} بتاريخ {visit.visit_date.strftime('%Y-%m-%d %H:%M')}"
+                )
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET', 'PUT', 'PATCH', 'DELETE'])
@@ -192,6 +198,47 @@ def visit_detail(request, pk):
     elif request.method == 'DELETE':
         visit.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def accept_visit(request, visit_id):
+    try:
+        visit = Visit.objects.get(id=visit_id)
+
+        if visit.status != "missing":
+            return Response(
+                {"detail": "لا يمكن قبول هذه الزيارة، حالتها الحالية ليست (غير منجزة)."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        visit.status = "pending"
+        visit.save()
+
+        return Response(
+            {"detail": f"تم قبول الزيارة رقم {visit.id} وهي الآن قيد التقدم."},
+            status=status.HTTP_200_OK
+        )
+
+    except Visit.DoesNotExist:
+        return Response({"detail": "الزيارة غير موجودة"}, status=status.HTTP_404_NOT_FOUND)
+
+# تقديم تقرير 
+@api_view(['GET', 'PUT'])
+@permission_classes([IsAuthenticated])
+def visit_report(request, pk):
+    visit = get_object_or_404(Visit, pk=pk)
+
+    if request.method == 'GET':
+        serializer = VisitReportSerializer(visit)
+        return Response(serializer.data)
+
+    elif request.method == 'PUT':
+        serializer = VisitReportSerializer(visit, data=request.data, partial=True)
+        if serializer.is_valid():
+            visit.status = "done"   # عند التقديم نحول الحالة لمنجزة
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 #جدول الادوية
 @api_view(['GET', 'POST'])

@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from cloudinary.models import CloudinaryField
+from django.utils import timezone
 
 class User(AbstractUser):
     ROLE_CHOICES = (
@@ -69,9 +70,15 @@ class Visit(models.Model):
     elder = models.ForeignKey(Elder, on_delete=models.CASCADE)
     volunteer = models.ForeignKey(Volunteer, on_delete=models.CASCADE)
     visit_date = models.DateTimeField()
-    status = models.CharField(max_length=20)
+    status = models.CharField(
+    max_length=20,
+    choices=[
+            ('missing', 'missing'),
+            ('pending', 'pending'),
+            ('done', 'done'),
+        ],default='missing'
+    )
     duration_minutes = models.PositiveIntegerField()
-    is_submitted = models.BooleanField(default=False)
     submitted_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -137,15 +144,18 @@ class Visit(models.Model):
         return f"زيارة رقم {self.visit_id} لكبير السن {self.elder.name}"
 
     def save(self, *args, **kwargs):
-        if self.is_submitted and not self.submitted_at:
-            from django.utils import timezone
+        # إذا خلصت الزيارة ولسّا ما سجلنا وقت الإنجاز
+        if self.status == "done" and not self.submitted_at:
             self.submitted_at = timezone.now()
+
         super().save(*args, **kwargs)
 
+        # تحديث حالة المسن بصحة عامة (لو انحطت نسبة)
         if self.general_status_percent:
             elder = self.elder
-            elder.health_status = str(self.general_status_percent) 
+            elder.health_status = str(self.general_status_percent)
             elder.save(update_fields=['health_status'])
+
 
 
 # جدول التحاليل
