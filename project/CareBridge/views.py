@@ -229,7 +229,7 @@ def accept_visit(request, visit_id):
 @permission_classes([IsAuthenticated])
 def visit_report(request, elder_id):
     # جلب آخر زيارة للمسن
-    visit = Visit.objects.filter(elder_id=elder_id).order_by('-visit_date').last()
+    visit = Visit.objects.filter(elder_id=elder_id).order_by('-created_at').first()
     if not visit:
         return Response({"detail": "لا توجد زيارات لهذا المسن"}, status=status.HTTP_404_NOT_FOUND)
 
