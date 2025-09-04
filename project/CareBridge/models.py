@@ -151,7 +151,7 @@ class Visit(models.Model):
     general_status_percent = models.PositiveIntegerField(default=0)
 
     def __str__(self):
-        return f"زيارة رقم {self.visit_id} لكبير السن {self.elder.name}"
+        return f"زيارة رقم {self.visit_id} لكبير السن {self.elder.name} للمتطوع {self.volunteer.name}"
 
     def save(self, *args, **kwargs):
         # إذا خلصت الزيارة ولسّا ما سجلنا وقت الإنجاز
