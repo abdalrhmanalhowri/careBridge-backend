@@ -78,14 +78,12 @@ class Visit(models.Model):
             ('done', 'done'),
         ],default='missing'
     )
-    duration_minutes = models.PositiveIntegerField()
     submitted_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-
-    heart_rate = models.PositiveIntegerField()
-    blood_pressure = models.CharField(max_length=20)
-    oxygen_level = models.PositiveIntegerField()
-    blood_sugar = models.PositiveIntegerField()
+    heart_rate = models.PositiveIntegerField(null=True, blank=True)
+    blood_pressure = models.CharField(max_length=20, blank=True, null=True)
+    oxygen_level = models.PositiveIntegerField(null=True, blank=True)
+    blood_sugar = models.PositiveIntegerField(null=True, blank=True)
     general_health_status = models.CharField(
         max_length=20,
         choices=[
@@ -93,16 +91,20 @@ class Visit(models.Model):
             ('متوسط', 'متوسط'),
             ('يحتاج متابعة', 'يحتاج متابعة'),
             ('حرج', 'حرج'),
-        ]
+        ],
+        blank=True,
+        null=True
     )
-    health_notes = models.TextField(blank=True)
+    health_notes = models.TextField(null=True, blank=True)
     medical_need = models.CharField(
         max_length=30,
         choices=[
             ('فحص دوري', 'فحص دوري'),
             ('دواء', 'دواء'),
             ('مرافقة لطبيب', 'مرافقة لطبيب'),
-        ]
+        ],
+        null=True,
+        blank=True
     )
     psych_status = models.CharField(
         max_length=20,
@@ -111,7 +113,9 @@ class Visit(models.Model):
             ('مكتئب', 'مكتئب'),
             ('وحيد', 'وحيد'),
             ('متحسن', 'متحسن'),
-        ]
+        ],
+        null=True,
+        blank=True
     )
     social_status = models.CharField(
         max_length=50,
@@ -119,7 +123,9 @@ class Visit(models.Model):
             ('يتواصل مع الجيران', 'يتواصل مع الجيران'),
             ('لديه زيارات متقطعة', 'لديه زيارات متقطعة'),
             ('لا يوجد دعم عائلي', 'لا يوجد دعم عائلي'),
-        ]
+        ],
+        null=True,
+        blank=True
     )
     additional_notes = models.TextField(blank=True)
     living_need = models.CharField(
@@ -128,7 +134,9 @@ class Visit(models.Model):
             ('غذاء', 'غذاء'),
             ('أدوات منزلية', 'أدوات منزلية'),
             ('أدوية', 'أدوية'),
-        ]
+        ],
+        null=True,
+        blank=True
     )
     support_need = models.CharField(
         max_length=30,
@@ -136,7 +144,9 @@ class Visit(models.Model):
             ('زيارة إضافية', 'زيارة إضافية'),
             ('جلسة استماع', 'جلسة استماع'),
             ('نشاط جماعي', 'نشاط جماعي'),
-        ]
+        ],
+        null=True,
+        blank=True
     )
     general_status_percent = models.PositiveIntegerField(default=0)
 
