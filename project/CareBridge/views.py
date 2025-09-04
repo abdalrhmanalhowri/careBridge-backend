@@ -176,6 +176,7 @@ def visit_list(request):
                 # إنشاء إشعار تلقائي للمتطوع
                 Notification.objects.create(
                     volunteer=visit.volunteer,
+                    title="! لديك زيارة جديدة ",
                     message_text=f"تم تكليفك بزيارة جديدة للمسن {visit.elder.name} بتاريخ {visit.visit_date.strftime('%Y-%m-%d %H:%M')}"
                 )
                 return Response(serializer.data, status=status.HTTP_201_CREATED)

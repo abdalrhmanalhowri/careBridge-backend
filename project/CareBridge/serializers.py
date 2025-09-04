@@ -45,11 +45,15 @@ class VolunteerSerializer(serializers.ModelSerializer):
 
 
 class VisitSerializer(serializers.ModelSerializer):
+    elder_name = serializers.CharField(source='elder.name', read_only=True)
+    elder_city = serializers.CharField(source='elder.city', read_only=True)
+
     class Meta:
         model = Visit
         fields = [
             'visit_id',
-            'elder',
+            'elder_name',
+            'elder_city',
             'volunteer',
             'visit_date',
             'status',
