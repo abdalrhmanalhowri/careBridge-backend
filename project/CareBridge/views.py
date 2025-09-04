@@ -173,7 +173,7 @@ def visit_list(request):
     elif request.method == 'POST':
         serializer = VisitSerializer(data=request.data)
         if serializer.is_valid():
-                visit = serializer.save()
+                visit = serializer.save(volunteer=Volunteer.objects.get(user=request.user))
                 # إنشاء إشعار تلقائي للمتطوع
                 Notification.objects.create(
                     volunteer=visit.volunteer,
