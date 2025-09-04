@@ -177,7 +177,7 @@ def visit_list(request):
                 Notification.objects.create(
                     volunteer=visit.volunteer,
                     title="! لديك زيارة جديدة ",
-                    message_text=f"تم تكليفك بزيارة جديدة للمسن {visit.elder_name} في {visit.elder_city} بتاريخ {visit.visit_date.strftime('%Y-%m-%d %H:%M')}"
+                    message_text=f"تم تكليفك بزيارة جديدة للمسن {visit.elder.name} في {visit.elder.city} بتاريخ {visit.visit_date.strftime('%Y-%m-%d %H:%M')}"
                 )
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
