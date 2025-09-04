@@ -97,6 +97,7 @@ class VisitReportSerializer(serializers.ModelSerializer):
             'submitted_at',
             'analyses',
             'medications',
+            'status',
         ]
 
 
