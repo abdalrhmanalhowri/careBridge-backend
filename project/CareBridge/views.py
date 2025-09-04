@@ -227,8 +227,11 @@ def accept_visit(request, visit_id):
 # تقديم تقرير 
 @api_view(['GET', 'PUT'])
 @permission_classes([IsAuthenticated])
-def visit_report(request, pk):
-    visit = get_object_or_404(Visit, pk=pk)
+def visit_report(request, elder_id):
+    # جلب آخر زيارة للمسن
+    visit = Visit.objects.filter(elder_id=elder_id).order_by('-visit_date').first()
+    if not visit:
+        return Response({"detail": "لا توجد زيارات لهذا المسن"}, status=status.HTTP_404_NOT_FOUND)
 
     if request.method == 'GET':
         serializer = VisitReportSerializer(visit)
@@ -241,6 +244,7 @@ def visit_report(request, pk):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 #جدول الادوية
 @api_view(['GET', 'POST'])

@@ -19,7 +19,7 @@ urlpatterns = [
     path('visits/', views.visit_list, name='visit-list'),
     path('visits/<int:pk>/', views.visit_detail, name='visit-detail'),
     path("visits/<int:visit_id>/accept/", views.accept_visit, name="accept-visit"),
-    path('visits/<int:pk>/report/', views.visit_report, name='submit-visit-report'),
+    path('visits/<int:elder_id>/report/', views.visit_report, name='submit-visit-report'),
 
     # الادوية
     path('medications/', views.medication_list, name='medication-list'),
