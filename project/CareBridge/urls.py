@@ -41,4 +41,8 @@ urlpatterns = [
 
     # انشاء ادمن 
     path('create-superuser/', views.create_superuser, name='create_superuser'),
+
+    # ارسال بريد الكتروني
+    path("contact/send/", views.send_contact_email, name="send_contact_email"),
+
 ]

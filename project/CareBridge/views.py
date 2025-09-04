@@ -11,6 +11,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.parsers import MultiPartParser, FormParser 
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
+import resend
+from django.conf import settings
 
 User = get_user_model()
 
@@ -354,3 +356,33 @@ def create_superuser(request):
         )
         return Response({"message": "Superuser created successfully!"})
     return Response({"message": "Superuser already exists."})
+
+#  تواصل معنا 
+resend.api_key = settings.RESEND_API_KEY
+
+@api_view(['POST'])
+@permission_classes([AllowAny])  # أي شخص يقدر يرسل من الفورم
+def send_contact_email(request):
+    fullname = request.data.get("fullname")
+    email = request.data.get("email")
+    message = request.data.get("message")
+
+    if not fullname or not email or not message:
+        return Response({"error": "كل الحقول مطلوبة"}, status=400)
+
+    try:
+        resend.Emails.send({
+            "from": "onboarding@resend.dev",  # لازم دومين مفعل في Resend
+            "to": "carebridge.official0@gmail.com", 
+            "subject": f"رسالة جديدة من {fullname}",
+            "html": f"""
+                <h3>تفاصيل الرسالة:</h3>
+                <p><strong>الاسم:</strong> {fullname}</p>
+                <p><strong>البريد:</strong> {email}</p>
+                <p><strong>الرسالة:</strong> {message}</p>
+            """,
+        })
+
+        return Response({"message": "تم إرسال الرسالة بنجاح ✅"})
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
