@@ -165,7 +165,7 @@ def volunteer_detail(request):
 @permission_classes([IsAuthenticated])
 def visit_list(request):
     if request.method == 'GET':
-        visits = Visit.objects.all()
+        visits = Visit.objects.filter(volunteer=request.user)
         serializer = VisitSerializer(visits, many=True)
         return Response(serializer.data)
     
