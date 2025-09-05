@@ -75,8 +75,8 @@ class MedicationSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class VisitReportSerializer(serializers.ModelSerializer):
-    analyses = AnalysisSerializer(many=True, required=False)
-    medications = MedicationSerializer(many=True, required=False)
+    analyses = AnalysisSerializer(many=True, read_only=True)
+    medications = MedicationSerializer(many=True, read_only=True)
 
     class Meta:
         model = Visit
@@ -98,29 +98,6 @@ class VisitReportSerializer(serializers.ModelSerializer):
             'analyses',
             'medications',
         ]
-
-    def update(self, instance, validated_data):
-        analyses_json = self.context['request'].data.get('analyses')
-        medications_json = self.context['request'].data.get('medications')
-
-        if analyses_json:
-            analyses_data = json.loads(analyses_json)
-            for analysis in analyses_data:
-                Analysis.objects.create(visit=instance, **analysis)
-
-        if medications_json:
-            medications_data = json.loads(medications_json)
-            for med in medications_data:
-                Medication.objects.create(visit=instance, **med)
-
-        # باقي الحقول
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
-        instance.status = "done"
-        instance.save()
-
-        return instance
-
 
 
 class NotificationSerializer(serializers.ModelSerializer):

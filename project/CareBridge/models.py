@@ -170,9 +170,9 @@ class Visit(models.Model):
 
 # جدول التحاليل
 class Analysis(models.Model):
-    visit = models.ForeignKey(Visit, on_delete=models.CASCADE)
+    visit = models.ForeignKey(Visit, on_delete=models.CASCADE, related_name="analyses")
     name = models.CharField(max_length=50)
-    pdf_file = models.FileField(upload_to='pdf_analysis/')
+    pdf_file = CloudinaryField('file', blank=True, null=True)
 
     def __str__(self):
         return f"تحليل زيارة {self.visit.visit_id}"
@@ -180,7 +180,7 @@ class Analysis(models.Model):
 
 # جدول الأدوية
 class Medication(models.Model):
-    visit = models.ForeignKey(Visit, on_delete=models.CASCADE)
+    visit = models.ForeignKey(Visit, on_delete=models.CASCADE, related_name="medications")
     medication_name = models.CharField(max_length=100)
     dosage = models.CharField(max_length=50)
     duration = models.CharField(max_length=100)
