@@ -160,6 +160,25 @@ def volunteer_detail(request):
         volunteer.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+# حذف المتطوع 
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated]) 
+def delete_volunteer(request, user_id):
+    try:
+        user = User.objects.get(id=user_id)
+
+        # حذف المتطوع المرتبط
+        Volunteer.objects.filter(user=user).delete()
+
+        # حذف اليوزر نفسه
+        user.delete()
+
+        return Response({"detail": "تم حذف المستخدم والمتطوع بنجاح"}, status=status.HTTP_200_OK)
+
+    except User.DoesNotExist:
+        return Response({"detail": "المستخدم غير موجود"}, status=status.HTTP_404_NOT_FOUND)
+    
+
 #جدول الزيارات
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
