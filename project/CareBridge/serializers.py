@@ -6,15 +6,18 @@ import json
 User = get_user_model()
 
 class ElderSerializer(serializers.ModelSerializer):
+    image_url = serializers.SerializerMethodField()
+
     class Meta:
         model = Elder
         fields = '__all__'
-    
-    def get_avatar_url(self, obj):
+
+    def get_image_url(self, obj):
         if obj.image:
             request = self.context.get('request')
             return request.build_absolute_uri(obj.image.url) if request else obj.image.url
         return None
+
 
 class VolunteerSerializer(serializers.ModelSerializer):
     user = serializers.PrimaryKeyRelatedField(read_only=True)
@@ -65,9 +68,17 @@ class VisitSerializer(serializers.ModelSerializer):
         ]
 
 class AnalysisSerializer(serializers.ModelSerializer):
+    pdf_url = serializers.SerializerMethodField()
+
     class Meta:
         model = Analysis
         fields = '__all__'
+    
+    def get_pdf_url(self, obj):
+        if obj.pdf_file:
+            request = self.context.get('request')
+            return request.build_absolute_uri(obj.pdf_file.url) if request else obj.pdf_file.url
+        return None
 
 class MedicationSerializer(serializers.ModelSerializer):
     class Meta:
