@@ -229,22 +229,27 @@ def accept_visit(request, visit_id):
 @permission_classes([IsAuthenticated])
 @parser_classes([MultiPartParser, FormParser])
 def visit_report(request, elder_id):
-    # جلب آخر زيارة للمسن
     visit = Visit.objects.filter(elder_id=elder_id).order_by('-created_at').first()
     if not visit:
         return Response({"detail": "لا توجد زيارات لهذا المسن"}, status=status.HTTP_404_NOT_FOUND)
 
     if request.method == 'GET':
-        serializer = VisitReportSerializer(visit)
+        # مرر request داخل context
+        serializer = VisitReportSerializer(visit, context={'request': request})
         return Response(serializer.data)
 
     elif request.method == 'PUT':
-        serializer = VisitReportSerializer(visit, data=request.data, partial=True)
+        # كمان هون لازم تمرره
+        serializer = VisitReportSerializer(
+            visit, 
+            data=request.data, 
+            partial=True, 
+            context={'request': request}   # 👈 هذا السطر هو المهم
+        )
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
 #جدول الادوية
 @api_view(['GET', 'POST'])
