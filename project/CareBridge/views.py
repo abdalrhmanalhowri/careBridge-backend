@@ -205,7 +205,7 @@ def visit_detail(request, pk):
 @permission_classes([IsAuthenticated])
 def accept_visit(request, visit_id):
     try:
-        visit = Visit.objects.get(id=visit_id)
+        visit = Visit.objects.get(visit_id=visit_id)
 
         if visit.status != "missing":
             return Response(
