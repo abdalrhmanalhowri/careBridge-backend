@@ -22,11 +22,20 @@ class Elder(models.Model):
     gender = models.CharField(max_length=20)
     city = models.CharField(max_length=100)
     health_status = models.CharField(max_length=10, blank=True, null=True)
-    children_count = models.PositiveIntegerField()
-    financial_status = models.CharField(max_length=30)
-    special_needs = models.TextField()
-    phone = models.CharField(max_length=20)
     image = CloudinaryField('image', blank=True, null=True)
+    BLOOD_TYPES = [
+        ("A+", "A+"),
+        ("A-", "A-"),
+        ("B+", "B+"),
+        ("B-", "B-"),
+        ("AB+", "AB+"),
+        ("AB-", "AB-"),
+        ("O+", "O+"),
+        ("O-", "O-"),
+    ]
+    blood_type = models.CharField(
+        max_length=3, choices=BLOOD_TYPES, null=True, blank=True
+    )
 
     def __str__(self):
         return f"{self.id} – {self.name}"
