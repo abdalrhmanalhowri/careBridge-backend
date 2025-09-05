@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from .models import *
+import json
 
 User = get_user_model()
 
@@ -64,8 +65,6 @@ class VisitSerializer(serializers.ModelSerializer):
         ]
 
 class AnalysisSerializer(serializers.ModelSerializer):
-    pdf_file = serializers.FileField(required=False)
-    
     class Meta:
         model = Analysis
         fields = '__all__'
@@ -76,8 +75,8 @@ class MedicationSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class VisitReportSerializer(serializers.ModelSerializer):
-    analyses = AnalysisSerializer(source="analysis_set", many=True)
-    medications = MedicationSerializer(source="medication_set", many=True)
+    analyses = AnalysisSerializer(many=True, required=False)
+    medications = MedicationSerializer(many=True, required=False)
 
     class Meta:
         model = Visit
@@ -96,31 +95,29 @@ class VisitReportSerializer(serializers.ModelSerializer):
             'living_need',
             'support_need',
             'general_status_percent',
-            'submitted_at',
             'analyses',
             'medications',
-            'status',
         ]
 
     def update(self, instance, validated_data):
-        # طلّع البيانات المتعلقة بالتحاليل والأدوية
-        analyses_data = validated_data.pop('analyses', [])
-        medications_data = validated_data.pop('medications', [])
+        analyses_json = self.context['request'].data.get('analyses')
+        medications_json = self.context['request'].data.get('medications')
 
-        # عدل باقي الحقول
+        if analyses_json:
+            analyses_data = json.loads(analyses_json)
+            for analysis in analyses_data:
+                Analysis.objects.create(visit=instance, **analysis)
+
+        if medications_json:
+            medications_data = json.loads(medications_json)
+            for med in medications_data:
+                Medication.objects.create(visit=instance, **med)
+
+        # باقي الحقول
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.status = "done"
         instance.save()
-
-        # امسح القديم وسجل الجديد (ممكن تعمل merge بدل المسح لو حابب)
-        instance.analysis_set.all().delete()
-        for analysis in analyses_data:
-            Analysis.objects.create(visit=instance, **analysis)
-
-        instance.medication_set.all().delete()
-        for med in medications_data:
-            Medication.objects.create(visit=instance, **med)
 
         return instance
 
