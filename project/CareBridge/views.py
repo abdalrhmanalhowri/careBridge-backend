@@ -247,6 +247,8 @@ def visit_report(request, elder_id):
             context={'request': request}   # 👈 هذا السطر هو المهم
         )
         if serializer.is_valid():
+            visit.status = "done"
+            visit.save()
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

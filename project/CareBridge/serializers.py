@@ -97,6 +97,7 @@ class VisitReportSerializer(serializers.ModelSerializer):
             'general_status_percent',
             'analyses',
             'medications',
+            'status',
         ]
 
 
