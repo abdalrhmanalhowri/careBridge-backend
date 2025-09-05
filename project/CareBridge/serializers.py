@@ -74,8 +74,8 @@ class MedicationSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class VisitReportSerializer(serializers.ModelSerializer):
-    analyses = AnalysisSerializer(many=True, read_only=True, source='analysis_set')
-    medications = MedicationSerializer(many=True, read_only=True, source='medication_set')
+    analyses = AnalysisSerializer(many=True, required=False)
+    medications = MedicationSerializer(many=True, required=False)
 
     class Meta:
         model = Visit
@@ -99,6 +99,29 @@ class VisitReportSerializer(serializers.ModelSerializer):
             'medications',
             'status',
         ]
+
+    def update(self, instance, validated_data):
+        # طلّع البيانات المتعلقة بالتحاليل والأدوية
+        analyses_data = validated_data.pop('analyses', [])
+        medications_data = validated_data.pop('medications', [])
+
+        # عدل باقي الحقول
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.status = "done"
+        instance.save()
+
+        # امسح القديم وسجل الجديد (ممكن تعمل merge بدل المسح لو حابب)
+        instance.analysis_set.all().delete()
+        for analysis in analyses_data:
+            Analysis.objects.create(visit=instance, **analysis)
+
+        instance.medication_set.all().delete()
+        for med in medications_data:
+            Medication.objects.create(visit=instance, **med)
+
+        return instance
+
 
 
 class NotificationSerializer(serializers.ModelSerializer):

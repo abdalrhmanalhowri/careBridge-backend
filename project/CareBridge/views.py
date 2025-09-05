@@ -240,7 +240,6 @@ def visit_report(request, elder_id):
     elif request.method == 'PUT':
         serializer = VisitReportSerializer(visit, data=request.data, partial=True)
         if serializer.is_valid():
-            visit.status = "done"   # عند التقديم نحول الحالة لمنجزة
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
