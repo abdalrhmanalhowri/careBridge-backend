@@ -64,6 +64,8 @@ class VisitSerializer(serializers.ModelSerializer):
         ]
 
 class AnalysisSerializer(serializers.ModelSerializer):
+    pdf_file = serializers.FileField(required=False)
+    
     class Meta:
         model = Analysis
         fields = '__all__'
@@ -74,8 +76,8 @@ class MedicationSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class VisitReportSerializer(serializers.ModelSerializer):
-    analyses = AnalysisSerializer(many=True, required=False)
-    medications = MedicationSerializer(many=True, required=False)
+    analyses = AnalysisSerializer(source="analysis_set", many=True)
+    medications = MedicationSerializer(source="medication_set", many=True)
 
     class Meta:
         model = Visit

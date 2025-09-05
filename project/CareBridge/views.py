@@ -227,6 +227,7 @@ def accept_visit(request, visit_id):
 # تقديم تقرير 
 @api_view(['GET', 'PUT'])
 @permission_classes([IsAuthenticated])
+@parser_classes([MultiPartParser, FormParser])
 def visit_report(request, elder_id):
     # جلب آخر زيارة للمسن
     visit = Visit.objects.filter(elder_id=elder_id).order_by('-created_at').first()
