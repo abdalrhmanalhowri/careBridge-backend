@@ -217,7 +217,7 @@ def accept_visit(request, visit_id):
         visit.save()
 
         return Response(
-            {"detail": f"تم قبول الزيارة رقم {visit.id} وهي الآن قيد التقدم."},
+            {"detail": f"تم قبول الزيارة رقم {visit.visit_id} وهي الآن قيد التقدم."},
             status=status.HTTP_200_OK
         )
 
