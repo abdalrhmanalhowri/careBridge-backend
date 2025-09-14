@@ -50,4 +50,9 @@ urlpatterns = [
     # ارسال بريد الكتروني
     path("contact/send/", views.send_contact_email, name="send_contact_email"),
 
+
+    path("verify-email/", views.verify_email, name="verify-email"),
+    path("forgot-password/", views.forgot_password, name="forgot-password"),
+    path("reset-password/", views.reset_password, name="reset-password"),
+
 ]

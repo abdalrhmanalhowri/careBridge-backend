@@ -170,3 +170,12 @@ class RegisterSerializer(serializers.ModelSerializer):
         u.save()
         Volunteer.objects.create(user=u, **volunteer_data)
         return u
+
+class VerifyCodeSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    code = serializers.CharField(max_length=6)
+
+class ResetPasswordSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    code = serializers.CharField(max_length=6)
+    new_password = serializers.CharField(min_length=8)

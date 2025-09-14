@@ -13,26 +13,83 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 import resend
 from django.conf import settings
+import random
+from django.core.mail import send_mail
 
 User = get_user_model()
+
+# إرسال كود (للتسجيل أو إعادة تعيين كلمة المرور)
+def send_verification_code(user, purpose="verify"):
+    code = str(random.randint(100000, 999999))  # OTP
+    EmailVerificationCode.objects.create(user=user, code=code, purpose=purpose)
+    send_mail(
+        subject="رمز التحقق - CareBridge",
+        message=f"رمز التحقق الخاص بك هو: {code}",
+        from_email="noreply@carebridge.com",
+        recipient_list=[user.email],
+    )
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def register_volunteer(request):
     serializer = RegisterSerializer(data=request.data)
-    serializer.is_valid(raise_exception=True)
-    user = serializer.save()
-
-    refresh = RefreshToken.for_user(user)
-    
     if serializer.is_valid():
-        return Response({
-            "message": "تم إنشاء الحساب بنجاح",
-            "user_id": user.id,
-            "access": str(refresh.access_token),
-            "refresh": str(refresh)
-        }, status=status.HTTP_201_CREATED)
+        user = serializer.save()
+        volunteer = Volunteer.objects.get(user=user)
+        volunteer.is_verified = False
+        volunteer.save()
+
+        send_verification_code(user, purpose="verify")
+
+        return Response(
+            {"detail": "تم إنشاء الحساب بنجاح. الرجاء تأكيد البريد الإلكتروني قبل تسجيل الدخول."},
+            status=status.HTTP_201_CREATED
+        )
+
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# تأكيد البريد الإلكتروني
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def verify_email(request):
+    serializer = VerifyCodeSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+
+    email = serializer.validated_data['email']
+    code = serializer.validated_data['code']
+
+    try:
+        user = User.objects.get(email=email)
+        verification = EmailVerificationCode.objects.filter(
+            user=user, code=code, purpose="verify", is_used=False
+        ).last()
+
+        if verification and verification.is_valid():
+            # تحديث حالة الكود
+            verification.is_used = True
+            verification.save()
+
+            # تفعيل المتطوع
+            volunteer = user.volunteer
+            volunteer.is_verified = True
+            volunteer.save()
+
+            # توليد التوكنات
+            refresh = RefreshToken.for_user(user)
+
+            return Response({
+                "message": "تم تأكيد البريد بنجاح ✅",
+                "user_id": user.id,
+                "access": str(refresh.access_token),
+                "refresh": str(refresh)
+            }, status=status.HTTP_200_OK)
+
+        return Response({"detail": "رمز غير صالح أو منتهي"}, status=status.HTTP_400_BAD_REQUEST)
+
+    except User.DoesNotExist:
+        return Response({"detail": "المستخدم غير موجود"}, status=status.HTTP_404_NOT_FOUND)
+
 
 # login 
 @api_view(['POST'])
@@ -85,7 +142,6 @@ def elder_list(request):
         return Response(elders_data)
 
     elif request.method == 'POST':
-        # 🔹 خلي الإدخال فقط للـ authenticated users
         if not request.user.is_authenticated:
             return Response(
                 {'detail': 'يجب تسجيل الدخول لإضافة كبير السن.'},
@@ -106,22 +162,33 @@ def elder_list(request):
 
 
 @api_view(['GET', 'PUT', 'PATCH', 'DELETE'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny]) 
 def elder_detail(request, pk):
     elder = get_object_or_404(Elder, pk=pk)
+
     if request.method == 'GET':
         serializer = ElderSerializer(elder)
         return Response(serializer.data)
-    elif request.method in ['PUT', 'PATCH']:
+
+    # باقي العمليات تحتاج تسجيل دخول
+    if not request.user.is_authenticated:
+        return Response(
+            {"detail": "يجب تسجيل الدخول لإجراء هذا الطلب."},
+            status=status.HTTP_401_UNAUTHORIZED
+        )
+
+    if request.method in ['PUT', 'PATCH']:
         partial = (request.method == 'PATCH')
         serializer = ElderSerializer(elder, data=request.data, partial=partial)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     elif request.method == 'DELETE':
         elder.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 #جدول المتطوعين
 @api_view(['GET'])
@@ -243,9 +310,9 @@ def accept_visit(request, visit_id):
     except Visit.DoesNotExist:
         return Response({"detail": "الزيارة غير موجودة"}, status=status.HTTP_404_NOT_FOUND)
 
-# تقديم تقرير 
+# تقديم تقرير
 @api_view(['GET', 'PUT'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])  # السماح المبدئي للجميع
 @parser_classes([MultiPartParser, FormParser])
 def visit_report(request, elder_id):
     visit = Visit.objects.filter(elder_id=elder_id).order_by('-created_at').first()
@@ -253,17 +320,21 @@ def visit_report(request, elder_id):
         return Response({"detail": "لا توجد زيارات لهذا المسن"}, status=status.HTTP_404_NOT_FOUND)
 
     if request.method == 'GET':
-        # مرر request داخل context
         serializer = VisitReportSerializer(visit, context={'request': request})
         return Response(serializer.data)
 
     elif request.method == 'PUT':
-        # كمان هون لازم تمرره
+        if not request.user.is_authenticated:
+            return Response(
+                {"detail": "يجب تسجيل الدخول لتقديم التقرير."},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
         serializer = VisitReportSerializer(
-            visit, 
-            data=request.data, 
-            partial=True, 
-            context={'request': request}   # 👈 هذا السطر هو المهم
+            visit,
+            data=request.data,
+            partial=True,
+            context={'request': request}
         )
         if serializer.is_valid():
             visit.status = "done"
@@ -271,6 +342,7 @@ def visit_report(request, elder_id):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 #جدول الادوية
 @api_view(['GET', 'POST'])
@@ -465,3 +537,44 @@ def send_contact_email(request):
         return Response({"message": "تم إرسال الرسالة بنجاح ✅"})
     except Exception as e:
         return Response({"error": str(e)}, status=500)
+
+# طلب إعادة تعيين كلمة المرور
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def forgot_password(request):
+    email = request.data.get("email")
+    try:
+        user = User.objects.get(email=email)
+        send_verification_code(user, purpose="reset")
+        return Response({"detail": "تم إرسال رمز إعادة تعيين كلمة المرور إلى البريد"})
+    except User.DoesNotExist:
+        return Response({"detail": "المستخدم غير موجود"}, status=status.HTTP_404_NOT_FOUND)
+
+
+# إعادة تعيين كلمة المرور
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def reset_password(request):
+    serializer = ResetPasswordSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+
+    email = serializer.validated_data['email']
+    code = serializer.validated_data['code']
+    new_password = serializer.validated_data['new_password']
+
+    try:
+        user = User.objects.get(email=email)
+        verification = EmailVerificationCode.objects.filter(
+            user=user, code=code, purpose="reset", is_used=False
+        ).last()
+
+        if verification and verification.is_valid():
+            verification.is_used = True
+            verification.save()
+            user.set_password(new_password)
+            user.save()
+            return Response({"detail": "تم تغيير كلمة المرور بنجاح ✅"})
+        return Response({"detail": "رمز غير صالح أو منتهي"}, status=status.HTTP_400_BAD_REQUEST)
+
+    except User.DoesNotExist:
+        return Response({"detail": "المستخدم غير موجود"}, status=status.HTTP_404_NOT_FOUND)
