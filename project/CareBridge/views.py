@@ -33,7 +33,7 @@ def send_verification_code(user, purpose="verify"):
         text-align: center; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
         <h2 style="color: #4A90E2;">رمز التحقق - CareBridge</h2>
         <p style="font-size: 16px; color: #333;">
-            مرحباً {user.name}،
+            مرحباً {user.volunteer.name}،
         </p>
         <p style="font-size: 18px; margin: 20px 0;">
             رمز التحقق الخاص بك هو:

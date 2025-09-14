@@ -125,26 +125,15 @@ class CountDataSerializer(serializers.Serializer):
 
 class RegisterSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(required=True)
-    name = serializers.CharField(max_length=100)
-    age = serializers.IntegerField()
-    city = serializers.CharField(max_length=100)
-    job_title = serializers.CharField(max_length=100)
-    gender = serializers.ChoiceField(choices=[('ذكر', 'ذكر'), ('أنثى', 'أنثى')])
-    marital_status = serializers.ChoiceField(choices=[('أعزب', 'أعزب'), ('متزوج', 'متزوج'), ('آخر', 'آخر')])
-    resume = serializers.FileField()
-    agreed_terms = serializers.BooleanField()
-    commitment_statement = serializers.BooleanField()
+    password = serializers.CharField(write_only=True)
 
     class Meta:
-        model = User
+        model = Volunteer
         fields = [
             'email', 'password', 'name', 'age', 'city', 'job_title',
-            'gender', 'marital_status', 'resume', 'agreed_terms',
-            'commitment_statement'
+            'gender', 'marital_status', 'resume',
+            'agreed_terms', 'commitment_statement'
         ]
-        extra_kwargs = {
-            'password': {'write_only': True},  # نخلي الباسورد للإنشاء فقط
-        }
 
     def validate_email(self, value):
         if User.objects.filter(email=value).exists():
@@ -152,24 +141,23 @@ class RegisterSerializer(serializers.ModelSerializer):
         return value
 
     def create(self, validated_data):
-        volunteer_data = {
-            key: validated_data.pop(key)
-            for key in [
-                'name', 'age', 'city', 'job_title', 'gender', 'marital_status',
-                'resume', 'agreed_terms', 'commitment_statement'
-            ]
-        }
+        email = validated_data.pop('email')
+        password = validated_data.pop('password')
 
-        userEmail = validated_data['email']
-        u = User.objects.create_user(
-            username=userEmail,
-            email=userEmail,
-            password=validated_data['password']
+        # إنشاء المستخدم
+        user = User.objects.create_user(
+            username=email,
+            email=email,
+            password=password,
+            role="volunteer"
         )
-        u.is_active = True
-        u.save()
-        Volunteer.objects.create(user=u, **volunteer_data)
-        return u
+        user.is_active = True
+        user.save()
+
+        # إنشاء المتطوع وربطه بالمستخدم
+        volunteer = Volunteer.objects.create(user=user, **validated_data)
+        return volunteer
+
 
 class VerifyCodeSerializer(serializers.Serializer):
     email = serializers.EmailField()
