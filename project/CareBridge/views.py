@@ -597,8 +597,6 @@ def forgot_password(request):
     except User.DoesNotExist:
         return Response({"detail": "المستخدم غير موجود"}, status=status.HTTP_404_NOT_FOUND)
 
-
-# إعادة تعيين كلمة المرور
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def reset_password(request):
@@ -607,7 +605,7 @@ def reset_password(request):
 
     email = serializer.validated_data['email']
     code = serializer.validated_data['code']
-    new_password = serializer.validated_data['new_password']
+    new_password = serializer.validated_data.get('new_password')  # ممكن يكون مش موجود
 
     try:
         user = User.objects.get(email=email)
@@ -615,29 +613,27 @@ def reset_password(request):
             user=user, code=code, purpose="reset", is_used=False
         ).last()
 
-        if verification and verification.is_valid():
-            verification.is_used = True
-            verification.save()
-            user.set_password(new_password)
-            user.save()
-            return Response({"detail": "تم تغيير كلمة المرور بنجاح ✅"})
-        return Response({"detail": "رمز غير صالح أو منتهي"}, status=status.HTTP_400_BAD_REQUEST)
+        if not verification or not verification.is_valid():
+            return Response({"detail": "رمز غير صالح أو منتهي"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # ✅ إذا ما في new_password → معناها لسه عم نتحقق
+        if not new_password:
+            return Response({"detail": "تم التحقق من الرمز ✅ الرجاء إدخال كلمة المرور الجديدة"}, status=status.HTTP_200_OK)
+
+        # ✅ إذا في new_password → معناها بدنا نغير الباسورد
+        verification.is_used = True
+        verification.save()
+        user.set_password(new_password)
+        user.save()
+        return Response({"detail": "تم تغيير كلمة المرور بنجاح ✅"}, status=status.HTTP_200_OK)
 
     except User.DoesNotExist:
         return Response({"detail": "المستخدم غير موجود"}, status=status.HTTP_404_NOT_FOUND)
-    
 
 #  إعادة ارسال كود التاكيد
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def resend_verification_code(request):
-    """
-    إرسال كود تحقق جديد للمستخدم.
-    body متوقع:
-    {
-        "email": "user@example.com"
-    }
-    """
     email = request.data.get("email")
     if not email:
         return Response({"detail": "الرجاء إدخال البريد الإلكتروني."}, status=status.HTTP_400_BAD_REQUEST)
