@@ -616,3 +616,34 @@ def reset_password(request):
 
     except User.DoesNotExist:
         return Response({"detail": "المستخدم غير موجود"}, status=status.HTTP_404_NOT_FOUND)
+    
+
+#  إعادة ارسال كود التاكيد
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def resend_verification_code(request):
+    """
+    إرسال كود تحقق جديد للمستخدم.
+    body متوقع:
+    {
+        "email": "user@example.com"
+    }
+    """
+    email = request.data.get("email")
+    if not email:
+        return Response({"detail": "الرجاء إدخال البريد الإلكتروني."}, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        user = User.objects.get(email=email)
+
+        # إذا تم التحقق مسبقاً لا نرسل الكود
+        if hasattr(user, "volunteer") and user.volunteer.is_verified:
+            return Response({"detail": "تم بالفعل تأكيد البريد الإلكتروني."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # استدعاء الدالة الأصلية لإرسال كود جديد
+        send_verification_code(user, purpose="verify")
+
+        return Response({"detail": "تم إرسال رمز التحقق بنجاح."}, status=status.HTTP_200_OK)
+
+    except User.DoesNotExist:
+        return Response({"detail": "المستخدم غير موجود."}, status=status.HTTP_404_NOT_FOUND)
