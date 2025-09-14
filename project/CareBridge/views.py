@@ -18,26 +18,35 @@ from django.core.mail import send_mail
 
 User = get_user_model()
 resend.api_key = settings.RESEND_API_KEY
+
 # إرسال كود (للتسجيل أو إعادة تعيين كلمة المرور)
 def send_verification_code(user, purpose="verify"):
-    # اجعل كل الأكواد القديمة غير صالحة
+    # كل الأكواد القديمة غير صالحة
     EmailVerificationCode.objects.filter(user=user, purpose=purpose, is_used=False).update(is_used=True)
 
-    # أنشئ كود جديد
     code = str(random.randint(100000, 999999))
     EmailVerificationCode.objects.create(user=user, code=code, purpose=purpose)
+
+    if purpose == "verify":
+        subject = "رمز التحقق الخاص بك - CareBridge"
+        greeting = f"مرحباً {user.volunteer.name}،"
+        instruction = "رمز التحقق الخاص بك هو:"
+    elif purpose == "reset":
+        subject = "رمز إعادة تعيين كلمة المرور - CareBridge"
+        greeting = f"مرحباً {user.volunteer.name}،"
+        instruction = "رمز إعادة تعيين كلمة المرور الخاص بك هو:"
+    else:
+        subject = "رمز خاص بك - CareBridge"
+        greeting = f"مرحباً {user.volunteer.name}،"
+        instruction = "رمزك الخاص هو:"
 
     html_content = f"""
     <div style="font-family: Arial, sans-serif; background-color: #f9f9f9;
         padding: 20px; border-radius: 10px; max-width: 500px; margin: auto; 
         text-align: center; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
-        <h2 style="color: #4A90E2;">رمز التحقق - CareBridge</h2>
-        <p style="font-size: 16px; color: #333;">
-            مرحباً {user.volunteer.name}،
-        </p>
-        <p style="font-size: 18px; margin: 20px 0;">
-            رمز التحقق الخاص بك هو:
-        </p>
+        <h2 style="color: #4A90E2;">{subject}</h2>
+        <p style="font-size: 16px; color: #333;">{greeting}</p>
+        <p style="font-size: 18px; margin: 20px 0;">{instruction}</p>
         <div style="font-size: 24px; font-weight: bold; color: #ffffff;
             background-color: #4A90E2; padding: 10px 20px; border-radius: 8px;
             display: inline-block;">
@@ -50,8 +59,8 @@ def send_verification_code(user, purpose="verify"):
     """
 
     send_mail(
-        subject="رمز التحقق الخاص بك - CareBridge",
-        message="رمز التحقق الخاص بك هو: " + code,  # نص بديل لو العميل لا يدعم HTML
+        subject=subject,
+        message=f"{instruction} {code}",  # نص بديل للـ plain text
         from_email=settings.DEFAULT_FROM_EMAIL,
         recipient_list=[user.email],
         html_message=html_content,
