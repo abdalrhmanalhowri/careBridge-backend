@@ -17,7 +17,7 @@ import random
 from django.core.mail import send_mail
 
 User = get_user_model()
-
+resend.api_key = settings.RESEND_API_KEY
 # إرسال كود (للتسجيل أو إعادة تعيين كلمة المرور)
 def send_verification_code(user, purpose="verify"):
     code = str(random.randint(100000, 999999))

@@ -169,4 +169,4 @@ cloudinary.config(
     secure=True
 )
 
-RESEND_API_KEY = os.getenv("RESEND_API_KEY")
+RESEND_API_KEY = os.getenv("re_RpymVwAP_He8ZmoAx4ArLxyERwSRStWrQ")
