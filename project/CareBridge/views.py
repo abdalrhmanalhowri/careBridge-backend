@@ -57,16 +57,12 @@ def send_verification_code(user, purpose="verify"):
     </div>
     """
 
-    try:
-        resend.Emails.send({
-            "from": "onboarding@resend.dev",  # دومين مفعل
-            "to": user.email,
-            "subject": "رمز التحقق الخاص بك - CareBridge",
-            "html": html_content,
-        })
-    except Exception as e:
-         return Response({"error": str(e)}, status=500)
-
+    resend.Emails.send({
+        "from": "onboarding@resend.dev",  # دومين مفعل
+        "to": user.email,
+        "subject": "رمز التحقق الخاص بك - CareBridge",
+        "html": html_content,
+    })
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
