@@ -170,3 +170,27 @@ cloudinary.config(
 )
 
 RESEND_API_KEY = "re_RpymVwAP_He8ZmoAx4ArLxyERwSRStWrQ"
+
+
+# settings.py
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'  
+# يخبر Django أنه سيرسل الإيميلات عبر بروتوكول SMTP
+
+EMAIL_HOST = 'smtp.gmail.com'  
+# الخادم (server) الخاص بالبريد. إذا Gmail، نستخدم smtp.gmail.com
+
+EMAIL_PORT = 587  
+# المنفذ (port) المناسب لـ TLS مع Gmail
+
+EMAIL_USE_TLS = True  
+# TLS تشفير البريد
+
+EMAIL_HOST_USER = 'aa60708099@gmail.com'  
+# البريد الذي سترسل منه الإيميلات (يجب أن يكون مفعل SMTP)
+
+EMAIL_HOST_PASSWORD = 'epjj qtia vmyk gatr'  
+# كلمة مرور التطبيق (App Password) من Gmail وليس كلمة مرورك العادية
+
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER  
+# البريد الافتراضي للمرسل

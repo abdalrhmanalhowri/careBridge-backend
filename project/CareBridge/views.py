@@ -49,12 +49,14 @@ def send_verification_code(user, purpose="verify"):
     </div>
     """
 
-    resend.Emails.send({
-        "from": "onboarding@resend.dev",
-        "to": user.email,
-        "subject": "رمز التحقق الخاص بك - CareBridge",
-        "html": html_content,
-    })
+    send_mail(
+        subject="رمز التحقق الخاص بك - CareBridge",
+        message="رمز التحقق الخاص بك هو: " + code,  # نص بديل لو العميل لا يدعم HTML
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=[user.email],
+        html_message=html_content,
+        fail_silently=False,
+    )
 
 
 @api_view(['POST'])
