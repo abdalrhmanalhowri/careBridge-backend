@@ -20,14 +20,53 @@ User = get_user_model()
 
 # إرسال كود (للتسجيل أو إعادة تعيين كلمة المرور)
 def send_verification_code(user, purpose="verify"):
-    code = str(random.randint(100000, 999999))  # OTP
+    code = str(random.randint(100000, 999999))
     EmailVerificationCode.objects.create(user=user, code=code, purpose=purpose)
-    send_mail(
-        subject="رمز التحقق - CareBridge",
-        message=f"رمز التحقق الخاص بك هو: {code}",
-        from_email="noreply@carebridge.com",
-        recipient_list=[user.email],
-    )
+    html_content = f"""
+    <div style="
+        font-family: Arial, sans-serif; 
+        background-color: #f9f9f9; 
+        padding: 20px; 
+        border-radius: 10px; 
+        max-width: 500px; 
+        margin: auto; 
+        text-align: center;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    ">
+        <h2 style="color: #4A90E2;">رمز التحقق - CareBridge</h2>
+        <p style="font-size: 16px; color: #333;">
+            مرحباً {user.first_name or user.username}،
+        </p>
+        <p style="font-size: 18px; margin: 20px 0;">
+            رمز التحقق الخاص بك هو:
+        </p>
+        <div style="
+            font-size: 24px; 
+            font-weight: bold; 
+            color: #ffffff; 
+            background-color: #4A90E2; 
+            padding: 10px 20px; 
+            border-radius: 8px; 
+            display: inline-block;
+        ">
+            {code}
+        </div>
+        <p style="margin-top: 20px; font-size: 14px; color: #666;">
+            إذا لم تطلب هذا الرمز، يمكنك تجاهل الرسالة.
+        </p>
+    </div>
+    """
+
+    try:
+        resend.Emails.send({
+            "from": "onboarding@resend.dev",  # دومين مفعل
+            "to": user.email,
+            "subject": "رمز التحقق الخاص بك - CareBridge",
+            "html": html_content,
+        })
+    except Exception as e:
+         return Response({"error": str(e)}, status=500)
+
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
