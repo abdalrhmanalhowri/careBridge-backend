@@ -156,6 +156,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 
         # إنشاء المتطوع وربطه بالمستخدم
         volunteer = Volunteer.objects.create(user=user, **validated_data)
+        volunteer.save()
         return volunteer
 
 
