@@ -73,12 +73,11 @@ def send_verification_code(user, purpose="verify"):
 def register_volunteer(request):
     serializer = RegisterSerializer(data=request.data)
     if serializer.is_valid():
-        user = serializer.save()
-        volunteer = Volunteer.objects.get(user=user)
+        volunteer = serializer.save()
         volunteer.is_verified = False
         volunteer.save()
 
-        send_verification_code(user, purpose="verify")
+        send_verification_code(volunteer.user, purpose="verify")
 
         return Response(
             {"detail": "تم إنشاء الحساب بنجاح. الرجاء تأكيد البريد الإلكتروني قبل تسجيل الدخول."},
