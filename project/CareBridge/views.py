@@ -15,6 +15,8 @@ import resend
 from django.conf import settings
 import random
 from django.core.mail import send_mail
+from django.db.models.functions import ExtractYear, ExtractMonth
+from django.db.models import Count
 
 User = get_user_model()
 resend.api_key = settings.RESEND_API_KEY
@@ -500,22 +502,6 @@ def mark_notification_as_read(request, pk):
         notification.save()
 
     return Response({'message': 'تم تحديد الإشعار كمقروء.', 'read_at': notification.read_at})
-
-
-#الاحصائيات
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def get_data(request):
-    elders_count_view= Elder.objects.count()
-    volunteer_count_viwe= Volunteer.objects.count()
-    Visit_count_view= Visit.objects.count()
-
-    count_data={'elder_count':elders_count_view,
-                'volunteer_count':volunteer_count_viwe,
-                'visit_count':Visit_count_view,
-                }
-    serializer = CountDataSerializer(count_data)
-    return Response(serializer.data)
     
 
 # الصورة الشخصية
@@ -651,3 +637,122 @@ def resend_verification_code(request):
 
     except User.DoesNotExist:
         return Response({"detail": "المستخدم غير موجود."}, status=status.HTTP_404_NOT_FOUND)
+    
+
+#الاحصائيات
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_data(request):
+    elders_count_view = Elder.objects.count()
+    volunteer_count_view = Volunteer.objects.count()
+    visit_count_view = Visit.objects.count()
+    report_count_view = Visit.objects.filter(status="done").count()
+
+    count_data = {
+        'elder_count': elders_count_view,
+        'volunteer_count': volunteer_count_view,
+        'visit_count': visit_count_view,
+        'report_count': report_count_view,
+    }
+    serializer = CountDataSerializer(count_data)
+    return Response(serializer.data)
+
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def monthly_visits_report(request):
+    visits = (
+        Visit.objects.filter(status="done")
+        .annotate(year=ExtractYear('submitted_at'), month=ExtractMonth('submitted_at'))
+        .values('year', 'month')
+        .annotate(total_visit=Count('visit_id'))
+        .order_by('year', 'month')
+    )
+
+    data = [
+        {
+            "year": v["year"],
+            "month": v["month"],
+            "total_visit": v["total_visit"],
+        }
+        for v in visits
+    ]
+
+    return Response(data)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def monthly_overview(request):
+    # المسنين شهريًا
+    elders = (
+        Elder.objects.annotate(year=ExtractYear('created_at'), month=ExtractMonth('created_at'))
+        .values('year', 'month')
+        .annotate(total_elders=Count('id'))
+    )
+
+    # المتطوعين شهريًا
+    volunteers = (
+        Volunteer.objects.annotate(year=ExtractYear('created_at'), month=ExtractMonth('created_at'))
+        .values('year', 'month')
+        .annotate(total_volunteers=Count('id'))
+    )
+
+    # الزيارات شهريًا
+    visits = (
+        Visit.objects.annotate(year=ExtractYear('created_at'), month=ExtractMonth('created_at'))
+        .values('year', 'month')
+        .annotate(total_visits=Count('id'))
+    )
+
+    # التقارير شهريًا (زيارات حالتها done)
+    reports = (
+        Visit.objects.filter(status='done')
+        .annotate(year=ExtractYear('submitted_at'), month=ExtractMonth('submitted_at'))
+        .values('year', 'month')
+        .annotate(total_reports=Count('id'))
+    )
+
+    # تحويل الـ QuerySets لقواميس
+    elders_dict = {(e['year'], e['month']): e['total_elders'] for e in elders}
+    volunteers_dict = {(v['year'], v['month']): v['total_volunteers'] for v in volunteers}
+    visits_dict = {(v['year'], v['month']): v['total_visits'] for v in visits}
+    reports_dict = {(r['year'], r['month']): r['total_reports'] for r in reports}
+
+    # نجمع كل الأشهر الموجودة بأي من الجداول
+    months_years = set(list(elders_dict.keys()) + list(volunteers_dict.keys()) +
+                       list(visits_dict.keys()) + list(reports_dict.keys()))
+
+    # بناء البيانات النهائية
+    data = []
+    for year, month in sorted(months_years):
+        data.append({
+            "year": year,
+            "month": month,
+            "eldersCount": elders_dict.get((year, month), 0),
+            "volunteersCount": volunteers_dict.get((year, month), 0),
+            "visitsCount": visits_dict.get((year, month), 0),
+            "reportsCount": reports_dict.get((year, month), 0),
+        })
+
+    return Response(data)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def recent_volunteers(request):
+    # رجع آخر 10 متطوعين (ممكن تغير العدد حسب الحاجة)
+    volunteers = Volunteer.objects.select_related("user").order_by('-created_at')[:8]
+
+    data = []
+    for v in volunteers:
+        data.append({
+            "id": v.id,
+            "name": v.name,
+            "email": v.user.email,
+            "image": v.image,
+            "city": v.city,
+            "created_at": v.created_at.strftime("%Y-%m-%d %H:%M"),
+        })
+
+    return Response(data)
