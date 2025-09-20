@@ -638,6 +638,25 @@ def resend_verification_code(request):
     except User.DoesNotExist:
         return Response({"detail": "المستخدم غير موجود."}, status=status.HTTP_404_NOT_FOUND)
     
+#  admin dashboard
+
+# تسجيل الدخول للادمنز 
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def login_admin(request):
+    email = request.data.get("email")
+    password = request.data.get("password")
+    user = authenticate(request, username=email, password=password)
+    
+    if not user or not user.is_superuser:
+        return Response({"detail": "غير مسموح"}, status=403)
+
+    refresh = RefreshToken.for_user(user)
+    return Response({
+        "message": "تم تسجيل الدخول بنجاح كأدمن",
+        "access": str(refresh.access_token),
+        "refresh": str(refresh),
+    })
 
 #الاحصائيات
 @api_view(['GET'])

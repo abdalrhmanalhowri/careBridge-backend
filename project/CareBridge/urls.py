@@ -7,6 +7,9 @@ urlpatterns = [
 
     #  تسجيل الدخول 
     path("login/", views.login_volunteer, name="login"),
+    #  للادمنز
+    path("login/admin/", views.login_admin, name="login_admin"),
+
     # كبار السن
     path('elders/', views.elder_list, name='elder-list'),
     path('elders/<int:pk>/', views.elder_detail, name='elder-detail'),
