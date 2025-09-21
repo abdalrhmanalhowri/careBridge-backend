@@ -122,6 +122,7 @@ class CountDataSerializer(serializers.Serializer):
     elder_count = serializers.IntegerField()
     volunteer_count = serializers.IntegerField()
     visit_count = serializers.IntegerField()
+    report_count = serializers.IntegerField()
 
 class RegisterSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(required=True)
