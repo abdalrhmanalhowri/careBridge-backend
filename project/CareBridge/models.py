@@ -24,6 +24,7 @@ class Elder(models.Model):
     city = models.CharField(max_length=100)
     health_status = models.CharField(max_length=10, blank=True, null=True)
     image = CloudinaryField('image', blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
     BLOOD_TYPES = [
         ("A+", "A+"),
         ("A-", "A-"),

@@ -760,7 +760,6 @@ def monthly_overview(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def recent_volunteers(request):
-    # رجع آخر 10 متطوعين (ممكن تغير العدد حسب الحاجة)
     volunteers = Volunteer.objects.select_related("user").order_by('-created_at')[:8]
 
     data = []
@@ -768,8 +767,8 @@ def recent_volunteers(request):
         data.append({
             "id": v.id,
             "name": v.name,
-            "email": v.user.email,
-            "image": v.image,
+            "email": v.user.email if v.user else None,
+            "image": v.image.url if v.image else None,  
             "city": v.city,
             "created_at": v.created_at.strftime("%Y-%m-%d %H:%M"),
         })
