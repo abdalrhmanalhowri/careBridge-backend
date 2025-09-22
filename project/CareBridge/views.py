@@ -722,7 +722,7 @@ def monthly_overview(request):
     visits = (
         Visit.objects.annotate(year=ExtractYear('created_at'), month=ExtractMonth('created_at'))
         .values('year', 'month')
-        .annotate(total_visits=Count('id'))
+        .annotate(total_visits=Count('visit_id'))  # 👈 عدلتها
     )
 
     # التقارير شهريًا (زيارات حالتها done)
@@ -730,8 +730,9 @@ def monthly_overview(request):
         Visit.objects.filter(status='done')
         .annotate(year=ExtractYear('submitted_at'), month=ExtractMonth('submitted_at'))
         .values('year', 'month')
-        .annotate(total_reports=Count('id'))
+        .annotate(total_reports=Count('visit_id'))  # 👈 عدلتها
     )
+
 
     # تحويل الـ QuerySets لقواميس
     elders_dict = {(e['year'], e['month']): e['total_elders'] for e in elders}
