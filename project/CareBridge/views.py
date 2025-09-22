@@ -777,28 +777,29 @@ def recent_volunteers(request):
     return Response(data)
 
 #  حالات المسنين 
-
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def get_health_status_stats(request):
+def elders_health_status_stats(request):
     elders = Elder.objects.all()
-    total = elders.count()
+    total = elders.count() or 1 
 
-    if total == 0:
-        return Response([
-            {"status": "حالة جيدة", "percent": 0},
-            {"status": "حالة متوسطة", "percent": 0},
-            {"status": "حالة حرجة", "percent": 0},
-        ])
-
-    critical = elders.filter(age__lte=50).count()     # حرجة
-    medium = elders.filter(age__gte=51, age__lte=79).count()  # متوسطة
-    good = elders.filter(age__gte=80).count()         # جيدة
+    critical = elders.filter(health_status__lte=50).count()
+    medium = elders.filter(health_status__gte=51, health_status__lte=79).count()
+    good = elders.filter(health_status__gte=80).count()
 
     data = [
-        {"status": "حالة جيدة", "percent": round((good / total) * 100, 2)},
-        {"status": "حالة متوسطة", "percent": round((medium / total) * 100, 2)},
-        {"status": "حالة حرجة", "percent": round((critical / total) * 100, 2)},
+        {
+            "status": "حالة جيدة",
+            "percent": round((good / total) * 100, 2),
+        },
+        {
+            "status": "حالة متوسطة",
+            "percent": round((medium / total) * 100, 2),
+        },
+        {
+            "status": "حالة حرجة",
+            "percent": round((critical / total) * 100, 2),
+        },
     ]
 
     return Response(data)
