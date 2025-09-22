@@ -45,7 +45,7 @@ urlpatterns = [
     path("monthly-visits/", views.monthly_visits_report, name="monthly_visits"),
     path("monthly_overview/", views.monthly_overview, name="monthly_overview"),
     path("recent_volunteers/", views.recent_volunteers, name="recent_volunteers"),
-    path("elders_health_status/", views.get_health_status_stats, name="health_status"),
+    path("elders_health_status/", views.elders_health_status_stats, name="health_status"),
 
 
     # الصورة الشخصية
