@@ -16,7 +16,9 @@ from django.conf import settings
 import random
 from django.core.mail import send_mail
 from django.db.models.functions import ExtractYear, ExtractMonth
-from django.db.models import Count
+from django.db.models import Count , Q
+from rest_framework.pagination import PageNumberPagination
+
 
 User = get_user_model()
 resend.api_key = settings.RESEND_API_KEY
@@ -173,9 +175,54 @@ def login_volunteer(request):
 @permission_classes([AllowAny])
 def elder_list(request):
     if request.method == 'GET':
-        elders_data = []
         elders = Elder.objects.all()
-        for elder in elders:
+
+        # 🔎 البحث بالاسم أو المدينة
+        search = request.GET.get('search')
+        if search:
+            elders = elders.filter(
+                Q(name__icontains=search) | Q(city__icontains=search)
+            )
+
+        # 🔎 التصفية حسب العمر
+        min_age = request.GET.get('min_age')
+        max_age = request.GET.get('max_age')
+        if min_age:
+            elders = elders.filter(age__gte=min_age)
+        if max_age:
+            elders = elders.filter(age__lte=max_age)
+
+        # 🔎 التصفية حسب الحالة الصحية (good, medium, critical)
+        health_status = request.GET.get('health_status')
+        if health_status:
+            elders_ids = []
+            for elder in elders:
+                last_visit = Visit.objects.filter(elder=elder).order_by('-visit_date').first()
+                if last_visit:
+                    percent = last_visit.general_status_percent
+                    if health_status == "good" and percent >= 80:
+                        elders_ids.append(elder.id)
+                    elif health_status == "medium" and 51 <= percent <= 79:
+                        elders_ids.append(elder.id)
+                    elif health_status == "critical" and percent <= 50:
+                        elders_ids.append(elder.id)
+            elders = elders.filter(id__in=elders_ids)
+
+        # 🔎 الترتيب (الأحدث أو الأقدم)
+        ordering = request.GET.get('ordering')
+        if ordering == 'newest':
+            elders = elders.order_by('-created_at')
+        elif ordering == 'oldest':
+            elders = elders.order_by('created_at')
+        else:
+            elders = elders.order_by('id') 
+
+        paginator = PageNumberPagination()
+        paginator.page_size = request.GET.get('page_size', 20)
+        result_page = paginator.paginate_queryset(elders, request)
+
+        elders_data = []
+        for elder in result_page:
             last_visit = Visit.objects.filter(elder=elder).order_by('-visit_date').first()
             health_percent = last_visit.general_status_percent if last_visit else None
 
@@ -185,23 +232,18 @@ def elder_list(request):
                 'age': elder.age,
                 'gender': elder.gender,
                 'city': elder.city,
-                'health_status':health_percent,
+                'health_status': health_percent,
             })
-        return Response(elders_data)
 
+        return paginator.get_paginated_response(elders_data)
+
+    # ➕ إضافة مسن جديد
     elif request.method == 'POST':
         if not request.user.is_authenticated:
             return Response(
                 {'detail': 'يجب تسجيل الدخول لإضافة كبير السن.'},
                 status=status.HTTP_401_UNAUTHORIZED
             )
-        serializer = ElderSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    elif request.method == 'POST':
         serializer = ElderSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
