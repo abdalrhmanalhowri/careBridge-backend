@@ -605,7 +605,7 @@ def send_contact_email(request):
     try:
         resend.Emails.send({
             "from": "onboarding@resend.dev",  # لازم دومين مفعل في Resend
-            "to": "carebridge.official0@gmail.com", 
+            "to": "aa60708099@gmail.com", 
             "subject": f"رسالة جديدة من {fullname}",
             "html": f"""
                 <h3>تفاصيل الرسالة:</h3>
