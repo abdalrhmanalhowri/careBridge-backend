@@ -59,7 +59,9 @@ MIDDLEWARE = [
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
+    "https://localhost:5173",  # لو تستخدم HTTPS محليًا
     "https://carebridge-nine.vercel.app",
+    "https://carebridge-backend-bp1p.onrender.com",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
