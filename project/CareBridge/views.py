@@ -31,17 +31,22 @@ def send_verification_code(user, purpose="verify"):
     code = str(random.randint(100000, 999999))
     EmailVerificationCode.objects.create(user=user, code=code, purpose=purpose)
 
+    if hasattr(user, 'volunteer') and user.volunteer:
+        name = user.volunteer.name
+    else:
+        name = user.email.split('@')[0]  # fallback للاسم من الإيميل
+
     if purpose == "verify":
         subject = "رمز التحقق الخاص بك - CareBridge"
-        greeting = f"مرحباً {user.volunteer.name}،"
+        greeting = f"مرحباً {name}،"
         instruction = "رمز التحقق الخاص بك هو:"
     elif purpose == "reset":
         subject = "رمز إعادة تعيين كلمة المرور - CareBridge"
-        greeting = f"مرحباً {user.volunteer.name}،"
+        greeting = f"مرحباً {name}،"
         instruction = "رمز إعادة تعيين كلمة المرور الخاص بك هو:"
     else:
         subject = "رمز خاص بك - CareBridge"
-        greeting = f"مرحباً {user.volunteer.name}،"
+        greeting = f"مرحباً {name}،"
         instruction = "رمزك الخاص هو:"
 
     html_content = f"""
@@ -68,7 +73,7 @@ def send_verification_code(user, purpose="verify"):
         from_email=settings.DEFAULT_FROM_EMAIL,
         recipient_list=[user.email],
         html_message=html_content,
-        fail_silently=False,
+        fail_silently=True,
     )
 
 

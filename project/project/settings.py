@@ -57,13 +57,14 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-# CORS_ALLOWED_ORIGINS = [
-#     "http://localhost:5173",
-#     "https://localhost:5173",  # لو تستخدم HTTPS محليًا
-#     "https://carebridge-nine.vercel.app",
-#     "https://carebridge-backend-bp1p.onrender.com",
-# ]
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "https://localhost:5173",  # لو تستخدم HTTPS محليًا
+    "https://carebridge-nine.vercel.app",
+    "https://carebridge-backend-bp1p.onrender.com",
+]
+
+CORS_ALLOW_ALL_ORIGINS = False
 
 
 ROOT_URLCONF = 'project.urls'
@@ -188,9 +189,9 @@ EMAIL_PORT = 587
 
 EMAIL_USE_TLS = True  
 # TLS تشفير البريد
-EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
 # البريد الذي سترسل منه الإيميلات (يجب أن يكون مفعل SMTP)
-EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
 # كلمة مرور التطبيق (App Password) من Gmail وليس كلمة مرورك العادية
 
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER  
