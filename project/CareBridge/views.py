@@ -62,14 +62,14 @@ def send_verification_code(user, purpose="verify"):
     </div>
     """
 
-    send_mail(
-        subject=subject,
-        message=f"{instruction} {code}",  # نص بديل للـ plain text
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[user.email],
-        html_message=html_content,
-        fail_silently=False,
-    )
+    # send_mail(
+    #     subject=subject,
+    #     message=f"{instruction} {code}",  # نص بديل للـ plain text
+    #     from_email=settings.DEFAULT_FROM_EMAIL,
+    #     recipient_list=[user.email],
+    #     html_message=html_content,
+    #     fail_silently=False,
+    # )
 
 
 @api_view(['POST'])
