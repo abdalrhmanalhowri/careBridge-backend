@@ -62,6 +62,8 @@ CORS_ALLOWED_ORIGINS = [
     "https://carebridge-nine.vercel.app",
 ]
 
+CORS_ALLOW_CREDENTIALS = True
+
 
 ROOT_URLCONF = 'project.urls'
 

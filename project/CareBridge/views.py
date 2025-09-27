@@ -33,15 +33,15 @@ def send_verification_code(user, purpose="verify"):
 
     if purpose == "verify":
         subject = "رمز التحقق الخاص بك - CareBridge"
-        greeting = f"مرحباً "
+        greeting = f"مرحباً {user.volunteer.name}،"
         instruction = "رمز التحقق الخاص بك هو:"
     elif purpose == "reset":
         subject = "رمز إعادة تعيين كلمة المرور - CareBridge"
-        greeting = f"مرحباً "
+        greeting = f"مرحباً {user.volunteer.name}،"
         instruction = "رمز إعادة تعيين كلمة المرور الخاص بك هو:"
     else:
         subject = "رمز خاص بك - CareBridge"
-        greeting = f"مرحباً "
+        greeting = f"مرحباً {user.volunteer.name}،"
         instruction = "رمزك الخاص هو:"
 
     html_content = f"""
