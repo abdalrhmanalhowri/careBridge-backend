@@ -187,11 +187,9 @@ EMAIL_PORT = 587
 
 EMAIL_USE_TLS = True  
 # TLS تشفير البريد
-
-EMAIL_HOST_USER = 'carebridge.official0@gmail.com'  
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
 # البريد الذي سترسل منه الإيميلات (يجب أن يكون مفعل SMTP)
-
-EMAIL_HOST_PASSWORD = 'rsye qhpy powt tytd'  
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
 # كلمة مرور التطبيق (App Password) من Gmail وليس كلمة مرورك العادية
 
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER  
