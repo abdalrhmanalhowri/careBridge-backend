@@ -18,7 +18,7 @@ from django.core.mail import send_mail
 from django.db.models.functions import ExtractYear, ExtractMonth
 from django.db.models import Count , Q
 from rest_framework.pagination import PageNumberPagination
-
+from .pagination import CustomPagination
 
 User = get_user_model()
 resend.api_key = settings.RESEND_API_KEY
@@ -170,7 +170,6 @@ def login_volunteer(request):
     }, status=status.HTTP_200_OK)
 
 
-#جدول كبار السن
 @api_view(['GET', 'POST'])
 @permission_classes([AllowAny])
 def elder_list(request):
@@ -192,7 +191,7 @@ def elder_list(request):
         if max_age:
             elders = elders.filter(age__lte=max_age)
 
-        # 🔎 التصفية حسب الحالة الصحية (good, medium, critical)
+        # 🔎 التصفية حسب الحالة الصحية
         health_status = request.GET.get('health_status')
         if health_status:
             elders_ids = []
@@ -208,17 +207,16 @@ def elder_list(request):
                         elders_ids.append(elder.id)
             elders = elders.filter(id__in=elders_ids)
 
-        # 🔎 الترتيب (الأحدث أو الأقدم)
+        # 🔎 الترتيب
         ordering = request.GET.get('ordering')
         if ordering == 'newest':
             elders = elders.order_by('-created_at')
         elif ordering == 'oldest':
             elders = elders.order_by('created_at')
         else:
-            elders = elders.order_by('id') 
+            elders = elders.order_by('-created_at')
 
-        paginator = PageNumberPagination()
-        paginator.page_size = request.GET.get('page_size', 20)
+        paginator = CustomPagination()
         result_page = paginator.paginate_queryset(elders, request)
 
         elders_data = []
@@ -237,7 +235,6 @@ def elder_list(request):
 
         return paginator.get_paginated_response(elders_data)
 
-    # ➕ إضافة مسن جديد
     elif request.method == 'POST':
         if not request.user.is_authenticated:
             return Response(
