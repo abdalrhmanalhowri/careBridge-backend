@@ -165,8 +165,7 @@ def login_volunteer(request):
 
     if not hasattr(user, "volunteer") or not user.volunteer.is_verified:
         # أرسال كود جديد للتأكيد
-        # send_verification_code(user, purpose="verify")
-        send_verification_code_task.delay(user.id, purpose="verify")
+        send_verification_code(user, purpose="verify")
         return Response(
             {"detail": "الرجاء تأكيد البريد الإلكتروني أولاً."},
             status=status.HTTP_403_FORBIDDEN
