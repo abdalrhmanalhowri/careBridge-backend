@@ -196,3 +196,23 @@ EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
 
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER  
 # البريد الافتراضي للمرسل
+
+# project/settings.py
+
+# ... (بقية الإعدادات) ...
+
+# ----------------- Celery Configuration -----------------
+# يجب تغيير هذا الرابط ليتناسب مع وسيط الرسائل الخاص بك.
+# إذا كنت تستخدم Redis محليًا:
+CELERY_BROKER_URL = 'redis://127.0.0.1:6379/0' 
+# إذا كنت تستخدم Redis في بيئة النشر (Render)، استخدم URL الاتصال الخاص به.
+
+# لتخزين نتائج المهام (اختياري لكن مفيد)
+CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379/0'
+
+# تنسيق تسلسل البيانات
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'UTC' # أو منطقتك الزمنية
+# --------------------------------------------------------
