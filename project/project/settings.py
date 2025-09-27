@@ -184,10 +184,10 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'  
 # الخادم (server) الخاص بالبريد. إذا Gmail، نستخدم smtp.gmail.com
 
-EMAIL_PORT = 587  
-# المنفذ (port) المناسب لـ TLS مع Gmail
+EMAIL_PORT = 465 # منفذ SSL
+EMAIL_USE_TLS = False
+EMAIL_USE_SSL = True # استخدم تشفير SSL بدلاً من TLS
 
-EMAIL_USE_TLS = True  
 # TLS تشفير البريد
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
 # البريد الذي سترسل منه الإيميلات (يجب أن يكون مفعل SMTP)
