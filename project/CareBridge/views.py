@@ -25,23 +25,27 @@ resend.api_key = settings.RESEND_API_KEY
 
 # إرسال كود (للتسجيل أو إعادة تعيين كلمة المرور)
 def send_verification_code(user, purpose="verify"):
-    # كل الأكواد القديمة غير صالحة
+    # اجعل كل الأكواد القديمة غير صالحة
     EmailVerificationCode.objects.filter(user=user, purpose=purpose, is_used=False).update(is_used=True)
 
     code = str(random.randint(100000, 999999))
     EmailVerificationCode.objects.create(user=user, code=code, purpose=purpose)
 
+    # اسم المتطوع (fallback للبريد إذا ما في متطوع)
+    volunteer = getattr(user, "volunteer", None)
+    volunteer_name = volunteer.name if volunteer else user.email
+
     if purpose == "verify":
         subject = "رمز التحقق الخاص بك - CareBridge"
-        greeting = f"مرحباً {user.volunteer.name}،"
+        greeting = f"مرحباً {volunteer_name}،"
         instruction = "رمز التحقق الخاص بك هو:"
     elif purpose == "reset":
         subject = "رمز إعادة تعيين كلمة المرور - CareBridge"
-        greeting = f"مرحباً {user.volunteer.name}،"
+        greeting = f"مرحباً {volunteer_name}،"
         instruction = "رمز إعادة تعيين كلمة المرور الخاص بك هو:"
     else:
         subject = "رمز خاص بك - CareBridge"
-        greeting = f"مرحباً {user.volunteer.name}،"
+        greeting = f"مرحباً {volunteer_name}،"
         instruction = "رمزك الخاص هو:"
 
     html_content = f"""
@@ -62,31 +66,43 @@ def send_verification_code(user, purpose="verify"):
     </div>
     """
 
-    send_mail(
-        subject=subject,
-        message=f"{instruction} {code}",  # نص بديل للـ plain text
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[user.email],
-        html_message=html_content,
-        fail_silently=False,
-    )
+    try:
+        send_mail(
+            subject=subject,
+            message=f"{instruction} {code}",
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
+            html_message=html_content,
+            fail_silently=False,
+        )
+    except Exception as e:
+        # لا نرمي هنا 500 — فقط نسجل (يمكن إضافة logging)
+        print("Error sending verification email:", e)
+        # إذا أردت، ارجع False للإشارة لفشل الإرسال
+        return False
 
+    return True
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def register_volunteer(request):
     serializer = RegisterSerializer(data=request.data)
     if serializer.is_valid():
+        # serializer.create يجب أن تُعيد Volunteer وفق كودك الحالي
         volunteer = serializer.save()
-        volunteer.is_verified = False
-        volunteer.save()
-
-        send_verification_code(volunteer.user, purpose="verify")
-
-        return Response(
-            {"detail": "تم إنشاء الحساب بنجاح. الرجاء تأكيد البريد الإلكتروني قبل تسجيل الدخول."},
-            status=status.HTTP_201_CREATED
-        )
+        # تضمن وجود رابط user
+        if volunteer and hasattr(volunteer, "user"):
+            volunteer.is_verified = False
+            volunteer.save()
+            # نرسل كود التحقق، لكن إن فشل الإرسال لا نعيد 500
+            send_verification_code(volunteer.user, purpose="verify")
+            return Response(
+                {"detail": "تم إنشاء الحساب بنجاح. الرجاء تأكيد البريد الإلكتروني قبل تسجيل الدخول."},
+                status=status.HTTP_201_CREATED
+            )
+        else:
+            # حالة نادرة: لم يُنشأ المتطوع بشكل سليم
+            return Response({"detail": "خطأ في إنشاء المتطوع."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
