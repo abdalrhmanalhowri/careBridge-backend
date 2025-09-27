@@ -67,14 +67,18 @@ def send_verification_code(user, purpose="verify"):
     </div>
     """
 
-    send_mail(
-        subject=subject,
-        message=f"{instruction} {code}",  # نص بديل للـ plain text
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[user.email],
-        html_message=html_content,
-        fail_silently=True,
-    )
+    try:
+        send_mail(
+            subject=subject,
+            message=f"{instruction} {code}",
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
+            html_message=html_content,
+            fail_silently=False,
+        )
+    except Exception as e:
+        print("Email sending failed:", e)
+
 
 
 @api_view(['POST'])
