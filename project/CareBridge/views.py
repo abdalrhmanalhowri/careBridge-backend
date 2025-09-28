@@ -294,17 +294,41 @@ def elder_detail(request, pk):
 
 #جدول المتطوعين
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def volunteer_list(request):
-    volunteer = Volunteer.objects.filter(user=request.user).first()
-    if volunteer:
-        serializer = VolunteerSerializer(volunteer)
-        return Response(serializer.data)
+    volunteers = Volunteer.objects.all()
+
+    # 🔎 البحث بالاسم أو المدينة
+    search = request.GET.get('search')
+    if search:
+        volunteers = volunteers.filter(
+            Q(name__icontains=search) | Q(city__icontains=search)
+        )
+
+    # 🔎 التصفية حسب العمر
+    min_age = request.GET.get('min_age')
+    max_age = request.GET.get('max_age')
+    if min_age:
+        volunteers = volunteers.filter(age__gte=min_age)
+    if max_age:
+        volunteers = volunteers.filter(age__lte=max_age)
+
+    # 🔎 الترتيب
+    ordering = request.GET.get('ordering')
+    if ordering == 'newest':
+        volunteers = volunteers.order_by('-created_at')
+    elif ordering == 'oldest':
+        volunteers = volunteers.order_by('created_at')
     else:
-        return Response({
-            'message': 'لا يوجد متطوع مرتبط بهذا المستخدم.',
-            'volunteer': None
-        }, status=status.HTTP_404_NOT_FOUND)
+        volunteers = volunteers.order_by('-created_at')
+
+    # 📌 pagination
+    paginator = CustomPagination()
+    result_page = paginator.paginate_queryset(volunteers, request)
+
+    serializer = VolunteerSerializer(result_page, many=True)
+    return paginator.get_paginated_response(serializer.data)
+
 
 @api_view(['GET', 'PUT', 'PATCH', 'DELETE'])
 @permission_classes([IsAuthenticated])
