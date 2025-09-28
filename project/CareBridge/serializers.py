@@ -53,6 +53,7 @@ class VisitSerializer(serializers.ModelSerializer):
     elder_city = serializers.CharField(source='elder.city', read_only=True)
     elder = serializers.PrimaryKeyRelatedField(queryset=Elder.objects.all()) 
     volunteer = serializers.PrimaryKeyRelatedField(queryset=Volunteer.objects.all()) 
+    volunteer_name = serializers.CharField(source='volunteer.name', read_only=True)
 
     class Meta:
         model = Visit
@@ -64,6 +65,7 @@ class VisitSerializer(serializers.ModelSerializer):
             'volunteer',
             'visit_date',
             'status',
+            'volunteer_name',
             'created_at',
         ]
 
