@@ -19,9 +19,16 @@ from django.db.models.functions import ExtractYear, ExtractMonth
 from django.db.models import Count , Q
 from rest_framework.pagination import PageNumberPagination
 from .pagination import CustomPagination
+from sib_api_v3_sdk.rest import ApiException
+import sib_api_v3_sdk
 
 User = get_user_model()
 resend.api_key = settings.RESEND_API_KEY
+
+configuration = sib_api_v3_sdk.Configuration()
+configuration.api_key['api-key'] = settings.BREVO_API_KEY
+api_instance = sib_api_v3_sdk.TransactionalEmailsApi(sib_api_v3_sdk.ApiClient(configuration))
+
 
 # إرسال كود (للتسجيل أو إعادة تعيين كلمة المرور)
 def send_verification_code(user, purpose="verify"):
@@ -68,18 +75,16 @@ def send_verification_code(user, purpose="verify"):
     """
 
     try:
-        send_mail(
+        send_smtp_email = sib_api_v3_sdk.SendSmtpEmail(
+            to=[{"email": user.email, "name": name}],
+            sender={"email": settings.DEFAULT_FROM_EMAIL, "name": "CareBridge"},
             subject=subject,
-            message=f"{instruction} {code}",
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[user.email],
-            html_message=html_content,
-            fail_silently=False,
+            html_content=html_content,
+            text_content=f"{instruction} {code}"
         )
-    except Exception as e:
-        print("Email sending failed:", e)
-
-
+        api_instance.send_transac_email(send_smtp_email)
+    except ApiException as e:
+        print("Exception when calling Brevo API: %s\n" % e.body)
 
 
 @api_view(['POST'])
@@ -605,7 +610,7 @@ def send_contact_email(request):
     try:
         resend.Emails.send({
             "from": "onboarding@resend.dev",  # لازم دومين مفعل في Resend
-            "to": "aa60708099@gmail.com", 
+            "to": "carebridge.official0@gmail.com", 
             "subject": f"رسالة جديدة من {fullname}",
             "html": f"""
                 <h3>تفاصيل الرسالة:</h3>
@@ -852,3 +857,63 @@ def elders_health_status_stats(request):
     ]
 
     return Response(data)
+
+
+
+
+# # إرسال كود (للتسجيل أو إعادة تعيين كلمة المرور)
+# def send_verification_code(user, purpose="verify"):
+#     # كل الأكواد القديمة غير صالحة
+#     EmailVerificationCode.objects.filter(user=user, purpose=purpose, is_used=False).update(is_used=True)
+
+#     code = str(random.randint(100000, 999999))
+#     EmailVerificationCode.objects.create(user=user, code=code, purpose=purpose)
+
+#     if hasattr(user, 'volunteer') and user.volunteer:
+#         name = user.volunteer.name
+#     else:
+#         name = user.email.split('@')[0]  # fallback للاسم من الإيميل
+
+#     if purpose == "verify":
+#         subject = "رمز التحقق الخاص بك - CareBridge"
+#         greeting = f"مرحباً {name}،"
+#         instruction = "رمز التحقق الخاص بك هو:"
+#     elif purpose == "reset":
+#         subject = "رمز إعادة تعيين كلمة المرور - CareBridge"
+#         greeting = f"مرحباً {name}،"
+#         instruction = "رمز إعادة تعيين كلمة المرور الخاص بك هو:"
+#     else:
+#         subject = "رمز خاص بك - CareBridge"
+#         greeting = f"مرحباً {name}،"
+#         instruction = "رمزك الخاص هو:"
+
+#     html_content = f"""
+#     <div style="font-family: Arial, sans-serif; background-color: #f9f9f9;
+#         padding: 20px; border-radius: 10px; max-width: 500px; margin: auto; 
+#         text-align: center; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+#         <h2 style="color: #4A90E2;">{subject}</h2>
+#         <p style="font-size: 16px; color: #333;">{greeting}</p>
+#         <p style="font-size: 18px; margin: 20px 0;">{instruction}</p>
+#         <div style="font-size: 24px; font-weight: bold; color: #ffffff;
+#             background-color: #4A90E2; padding: 10px 20px; border-radius: 8px;
+#             display: inline-block;">
+#             {code}
+#         </div>
+#         <p style="margin-top: 20px; font-size: 14px; color: #666;">
+#             إذا لم تطلب هذا الرمز، يمكنك تجاهل الرسالة.
+#         </p>
+#     </div>
+#     """
+
+#     try:
+#         send_mail(
+#             subject=subject,
+#             message=f"{instruction} {code}",
+#             from_email=settings.DEFAULT_FROM_EMAIL,
+#             recipient_list=[user.email],
+#             html_message=html_content,
+#             fail_silently=False,
+#         )
+#     except Exception as e:
+#         print("Email sending failed:", e)
+

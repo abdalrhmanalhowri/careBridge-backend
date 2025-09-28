@@ -178,7 +178,7 @@ RESEND_API_KEY = "re_RpymVwAP_He8ZmoAx4ArLxyERwSRStWrQ"
 
 # settings.py
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'  
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # يخبر Django أنه سيرسل الإيميلات عبر بروتوكول SMTP
 
 EMAIL_HOST = 'smtp.gmail.com'  
@@ -195,9 +195,9 @@ EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
 # كلمة مرور التطبيق (App Password) من Gmail وليس كلمة مرورك العادية
 
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER  
+DEFAULT_FROM_EMAIL = 'carebridge.official0@gmail.com'  
 # البريد الافتراضي للمرسل
 
 # project/settings.py
 
-# ... (بقية الإعدادات) ...
+BREVO_API_KEY = os.environ.get('BREVO_API_KEY', '')
