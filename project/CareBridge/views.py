@@ -377,23 +377,65 @@ def delete_volunteer(request, user_id):
 @permission_classes([IsAuthenticated])
 def visit_list(request):
     if request.method == 'GET':
-        volunteer = Volunteer.objects.get(user=request.user)
-        visits = Visit.objects.filter(volunteer=volunteer)
-        serializer = VisitSerializer(visits, many=True)
-        return Response(serializer.data)
-    
+        if request.user.is_staff or request.user.is_superuser:
+            # ✅ الأدمن: عرض جميع الزيارات
+            visits = Visit.objects.all()
+        else:
+            # ✅ المتطوع: عرض زياراته فقط
+            volunteer = Volunteer.objects.get(user=request.user)
+            visits = Visit.objects.filter(volunteer=volunteer)
+
+        # 🔎 البحث
+        search = request.GET.get('search')
+        if search:
+            visits = visits.filter(
+                Q(elder__name__icontains=search) |
+                Q(elder__city__icontains=search) |
+                Q(volunteer__name__icontains=search)
+            )
+
+        # 🔎 التصفية حسب الحالة
+        status_filter = request.GET.get('status')
+        if status_filter:
+            visits = visits.filter(status=status_filter)
+
+        # 🔎 التصفية حسب التاريخ
+        start_date = request.GET.get('start_date')
+        end_date = request.GET.get('end_date')
+        if start_date:
+            visits = visits.filter(visit_date__date__gte=start_date)
+        if end_date:
+            visits = visits.filter(visit_date__date__lte=end_date)
+
+        # 🔎 الترتيب
+        ordering = request.GET.get('ordering')
+        if ordering == 'newest':
+            visits = visits.order_by('-visit_date')
+        elif ordering == 'oldest':
+            visits = visits.order_by('visit_date')
+        else:
+            visits = visits.order_by('-created_at')
+
+        # 📄 التصفّح (Pagination)
+        paginator = CustomPagination()
+        result_page = paginator.paginate_queryset(visits, request)
+
+        serializer = VisitSerializer(result_page, many=True)
+        return paginator.get_paginated_response(serializer.data)
+
     elif request.method == 'POST':
         serializer = VisitSerializer(data=request.data)
         if serializer.is_valid():
-                visit = serializer.save(volunteer=Volunteer.objects.get(user=request.user))
-                # إنشاء إشعار تلقائي للمتطوع
-                Notification.objects.create(
-                    volunteer=visit.volunteer,
-                    title="! لديك زيارة جديدة ",
-                    message_text=f"تم تكليفك بزيارة جديدة للمسن {visit.elder.name} في {visit.elder.city} بتاريخ {visit.visit_date.strftime('%Y-%m-%d %H:%M')}"
-                )
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            visit = serializer.save(volunteer=Volunteer.objects.get(user=request.user))
+            # إنشاء إشعار
+            Notification.objects.create(
+                volunteer=visit.volunteer,
+                title="! لديك زيارة جديدة ",
+                message_text=f"تم تكليفك بزيارة جديدة للمسن {visit.elder.name} في {visit.elder.city} بتاريخ {visit.visit_date.strftime('%Y-%m-%d %H:%M')}"
+            )
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 @api_view(['GET', 'PUT', 'PATCH', 'DELETE'])
 @permission_classes([IsAuthenticated])
