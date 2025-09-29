@@ -195,7 +195,7 @@ def elder_list(request):
         search = request.GET.get('search')
         if search:
             elders = elders.filter(
-                Q(name__icontains=search) | Q(city__icontains=search)
+                Q(name__icontains=search)
             )
 
         # 🔎 التصفية حسب العمر
@@ -302,7 +302,7 @@ def volunteer_list(request):
     search = request.GET.get('search')
     if search:
         volunteers = volunteers.filter(
-            Q(name__icontains=search) | Q(city__icontains=search)
+            Q(name__icontains=search)
         )
 
     # 🔎 التصفية حسب العمر
