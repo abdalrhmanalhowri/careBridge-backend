@@ -234,21 +234,9 @@ def elder_list(request):
         paginator = CustomPagination()
         result_page = paginator.paginate_queryset(elders, request)
 
-        elders_data = []
-        for elder in result_page:
-            last_visit = Visit.objects.filter(elder=elder).order_by('-visit_date').first()
-            health_percent = last_visit.general_status_percent if last_visit else None
+        serializer = ElderSerializer(result_page, many=True)
 
-            elders_data.append({
-                'id': elder.id,
-                'name': elder.name,
-                'age': elder.age,
-                'gender': elder.gender,
-                'city': elder.city,
-                'health_status': health_percent,
-            })
-
-        return paginator.get_paginated_response(elders_data)
+        return paginator.get_paginated_response(serializer.data)
 
     elif request.method == 'POST':
         if not request.user.is_authenticated:
