@@ -426,7 +426,7 @@ def visit_list(request):
     elif request.method == 'POST':
         serializer = VisitSerializer(data=request.data)
         if serializer.is_valid():
-            visit = serializer.save(volunteer=Volunteer.objects.get(user=request.user))
+            visit = serializer.save()
             # إنشاء إشعار
             Notification.objects.create(
                 volunteer=visit.volunteer,
