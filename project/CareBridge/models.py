@@ -24,7 +24,9 @@ class Elder(models.Model):
     city = models.CharField(max_length=100)
     health_status = models.CharField(max_length=10, blank=True, null=True)
     image = CloudinaryField('image', blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    # created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(default=timezone.now)
+
     BLOOD_TYPES = [
         ("A+", "A+"),
         ("A-", "A-"),
@@ -72,7 +74,9 @@ class Volunteer(models.Model):
     resume = CloudinaryField('file', resource_type='raw', blank=True, null=True)
     agreed_terms = models.BooleanField(default=False)
     commitment_statement = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
+    # created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(default=timezone.now)
+
 
     def __str__(self):
         return f"{self.name} – User: {self.user.username}"
@@ -92,7 +96,8 @@ class Visit(models.Model):
         ],default='missing'
     )
     submitted_at = models.DateTimeField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    # created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(default=timezone.now)
     heart_rate = models.PositiveIntegerField(null=True, blank=True)
     blood_pressure = models.CharField(max_length=20, blank=True, null=True)
     oxygen_level = models.PositiveIntegerField(null=True, blank=True)
