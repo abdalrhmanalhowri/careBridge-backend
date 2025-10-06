@@ -244,7 +244,3 @@ class EmailVerificationCode(models.Model):
 
     def __str__(self):
         return f"{self.user.email} - {self.purpose} - {self.code}"
-# class count_data:
-#     elder_count =0 
-#     volunteer_count=0
-#     visit_count=0
