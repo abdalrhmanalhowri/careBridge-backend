@@ -30,9 +30,8 @@ configuration.api_key['api-key'] = settings.BREVO_API_KEY
 api_instance = sib_api_v3_sdk.TransactionalEmailsApi(sib_api_v3_sdk.ApiClient(configuration))
 
 
-# إرسال كود (للتسجيل أو إعادة تعيين كلمة المرور)
 def send_verification_code(user, purpose="verify"):
-    # كل الأكواد القديمة غير صالحة
+
     EmailVerificationCode.objects.filter(user=user, purpose=purpose, is_used=False).update(is_used=True)
 
     code = str(random.randint(100000, 999999))
@@ -41,7 +40,7 @@ def send_verification_code(user, purpose="verify"):
     if hasattr(user, 'volunteer') and user.volunteer:
         name = user.volunteer.name
     else:
-        name = user.email.split('@')[0]  # fallback للاسم من الإيميل
+        name = user.email.split('@')[0] 
 
     if purpose == "verify":
         subject = "رمز التحقق الخاص بك - CareBridge"
@@ -105,8 +104,6 @@ def register_volunteer(request):
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
-# تأكيد البريد الإلكتروني
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def verify_email(request):
@@ -123,21 +120,22 @@ def verify_email(request):
         ).last()
 
         if verification and verification.is_valid():
-            # تحديث حالة الكود
+ 
             verification.is_used = True
             verification.save()
 
-            # تفعيل المتطوع
+         
             volunteer = user.volunteer
             volunteer.is_verified = True
             volunteer.save()
 
-            # توليد التوكنات
+   
             refresh = RefreshToken.for_user(user)
 
             return Response({
                 "message": "تم تأكيد البريد بنجاح ✅",
                 "user_id": user.id,
+                "volunteer_id" :user.volunteer.id,
                 "access": str(refresh.access_token),
                 "refresh": str(refresh)
             }, status=status.HTTP_200_OK)
@@ -169,7 +167,6 @@ def login_volunteer(request):
     refresh = RefreshToken.for_user(user)
 
     if not hasattr(user, "volunteer") or not user.volunteer.is_verified:
-        # أرسال كود جديد للتأكيد
         send_verification_code(user, purpose="verify")
         return Response(
             {"detail": "الرجاء تأكيد البريد الإلكتروني أولاً."},
@@ -180,6 +177,7 @@ def login_volunteer(request):
         "message": "تم تسجيل الدخول بنجاح",
         "user_id": user.id,
         "email": user.email,
+        "volunteer_id" :user.volunteer.id,
         "access": str(refresh.access_token),
         "refresh": str(refresh),
     }, status=status.HTTP_200_OK)
@@ -191,14 +189,12 @@ def elder_list(request):
     if request.method == 'GET':
         elders = Elder.objects.all()
 
-        # 🔎 البحث بالاسم أو المدينة
         search = request.GET.get('search')
         if search:
             elders = elders.filter(
                 Q(name__icontains=search)
             )
 
-        # 🔎 التصفية حسب العمر
         min_age = request.GET.get('min_age')
         max_age = request.GET.get('max_age')
         if min_age:
@@ -206,7 +202,6 @@ def elder_list(request):
         if max_age:
             elders = elders.filter(age__lte=max_age)
 
-        # 🔎 التصفية حسب الحالة الصحية
         health_status = request.GET.get('health_status')
         if health_status:
             elders_ids = []
@@ -222,7 +217,6 @@ def elder_list(request):
                         elders_ids.append(elder.id)
             elders = elders.filter(id__in=elders_ids)
 
-        # 🔎 الترتيب
         ordering = request.GET.get('ordering')
         if ordering == 'newest':
             elders = elders.order_by('-created_at')
@@ -260,7 +254,6 @@ def elder_detail(request, pk):
         serializer = ElderSerializer(elder)
         return Response(serializer.data)
 
-    # باقي العمليات تحتاج تسجيل دخول
     if not request.user.is_authenticated:
         return Response(
             {"detail": "يجب تسجيل الدخول لإجراء هذا الطلب."},
@@ -301,14 +294,12 @@ def delete_multiple_elders(request):
 def volunteer_list(request):
     volunteers = Volunteer.objects.all()
 
-    # 🔎 البحث بالاسم أو المدينة
     search = request.GET.get('search')
     if search:
         volunteers = volunteers.filter(
             Q(name__icontains=search)
         )
 
-    # 🔎 التصفية حسب العمر
     min_age = request.GET.get('min_age')
     max_age = request.GET.get('max_age')
     if min_age:
@@ -316,7 +307,6 @@ def volunteer_list(request):
     if max_age:
         volunteers = volunteers.filter(age__lte=max_age)
 
-    # 🔎 الترتيب
     ordering = request.GET.get('ordering')
     if ordering == 'newest':
         volunteers = volunteers.order_by('-created_at')
@@ -325,7 +315,6 @@ def volunteer_list(request):
     else:
         volunteers = volunteers.order_by('-created_at')
 
-    # 📌 pagination
     paginator = CustomPagination()
     result_page = paginator.paginate_queryset(volunteers, request)
 
@@ -342,7 +331,7 @@ def volunteer_detail(request, pk):
         serializer = VolunteerSerializer(volunteer)
         return Response(serializer.data)
 
-    # باقي العمليات تحتاج تسجيل دخول
+   
     if not request.user.is_authenticated:
         return Response(
             {"detail": "يجب تسجيل الدخول لإجراء هذا الطلب."},
@@ -368,10 +357,10 @@ def delete_volunteer(request, user_id):
     try:
         user = User.objects.get(id=user_id)
 
-        # حذف المتطوع المرتبط
+
         Volunteer.objects.filter(user=user).delete()
 
-        # حذف اليوزر نفسه
+ 
         user.delete()
 
         return Response({"detail": "تم حذف المستخدم والمتطوع بنجاح"}, status=status.HTTP_200_OK)
@@ -386,10 +375,10 @@ def delete_volunteer(request, user_id):
 def visit_list(request):
     if request.method == 'GET':
         if request.user.is_staff or request.user.is_superuser:
-            # ✅ الأدمن: عرض جميع الزيارات
+       
             visits = Visit.objects.all()
         else:
-            # ✅ المتطوع: عرض زياراته فقط
+       
             volunteer = Volunteer.objects.get(user=request.user)
             visits = Visit.objects.filter(volunteer=volunteer)
 
@@ -402,12 +391,12 @@ def visit_list(request):
                 Q(volunteer__name__icontains=search)
             )
 
-        # 🔎 التصفية حسب الحالة
+     
         status_filter = request.GET.get('status')
         if status_filter:
             visits = visits.filter(status=status_filter)
 
-        # 🔎 التصفية حسب التاريخ
+     
         start_date = request.GET.get('start_date')
         end_date = request.GET.get('end_date')
         if start_date:
@@ -415,7 +404,7 @@ def visit_list(request):
         if end_date:
             visits = visits.filter(visit_date__date__lte=end_date)
 
-        # 🔎 الترتيب
+      
         ordering = request.GET.get('ordering')
         if ordering == 'newest':
             visits = visits.order_by('-visit_date')
@@ -424,7 +413,7 @@ def visit_list(request):
         else:
             visits = visits.order_by('-created_at')
 
-        # 📄 التصفّح (Pagination)
+      
         paginator = CustomPagination()
         result_page = paginator.paginate_queryset(visits, request)
 
@@ -486,9 +475,9 @@ def accept_visit(request, visit_id):
     except Visit.DoesNotExist:
         return Response({"detail": "الزيارة غير موجودة"}, status=status.HTTP_404_NOT_FOUND)
 
-# تقديم تقرير
+
 @api_view(['GET', 'PUT'])
-@permission_classes([AllowAny])  # السماح المبدئي للجميع
+@permission_classes([AllowAny]) 
 @parser_classes([MultiPartParser, FormParser])
 def visit_report(request, elder_id):
     visit = Visit.objects.filter(elder_id=elder_id).order_by('-created_at').first()
@@ -519,8 +508,6 @@ def visit_report(request, elder_id):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
-#جدول الادوية
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
 def medication_list(request):
@@ -553,7 +540,6 @@ def medication_detail(request, pk):
         medication.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-#جدول التحاليل
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
 def analysis_list(request):
@@ -586,7 +572,6 @@ def analysis_detail(request, pk):
         analysis.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-#جدول الاشعارات
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def notification_list(request):
@@ -597,21 +582,6 @@ def notification_list(request):
     notifications = Notification.objects.filter(volunteer=volunteer)
     serializer = NotificationSerializer(notifications, many=True)
     return Response(serializer.data)
-
-# @api_view(['GET'])
-# @permission_classes([IsAuthenticated])
-# def notification_detail(request, pk):
-#     try:
-#         volunteer = Volunteer.objects.get(user=request.user)
-#     except Volunteer.DoesNotExist:
-#         return Response({'message': 'لا يوجد متطوع مرتبط بهذا المستخدم.'}, status=status.HTTP_404_NOT_FOUND)
-#     notification = get_object_or_404(Notification, pk=pk, volunteer=volunteer)
-#     if not notification.is_read:
-#         notification.is_read = True
-#         notification.read_at = timezone.now()
-#         notification.save()
-#     serializer = NotificationSerializer(notification)
-#     return Response(serializer.data)
    
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -632,7 +602,6 @@ def send_notification_to_volunteer(request):
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-# قراءة الاشعار 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def mark_notification_as_read(request, pk):
@@ -651,20 +620,19 @@ def mark_notification_as_read(request, pk):
     return Response({'message': 'تم تحديد الإشعار كمقروء.', 'read_at': notification.read_at})
     
 
-# الصورة الشخصية
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
 @parser_classes([MultiPartParser, FormParser])
 def avatar_view(request):
     volunteer = request.user.volunteer
 
-    # جلب الصورة
+
     if request.method == 'GET':
         if not volunteer.image:
             return Response({"error": "No avatar found"}, status=status.HTTP_404_NOT_FOUND)
         return Response({"image": request.build_absolute_uri(volunteer.image.url)})
 
-    # رفع/تحديث الصورة
+
     if request.method == 'POST':
         file_obj = request.data.get('image')
         if not file_obj:
@@ -691,7 +659,7 @@ def create_superuser(request):
 resend.api_key = settings.RESEND_API_KEY
 
 @api_view(['POST'])
-@permission_classes([AllowAny])  # أي شخص يقدر يرسل من الفورم
+@permission_classes([AllowAny])  
 def send_contact_email(request):
     fullname = request.data.get("fullname")
     email = request.data.get("email")
@@ -702,7 +670,7 @@ def send_contact_email(request):
 
     try:
         resend.Emails.send({
-            "from": "onboarding@resend.dev",  # لازم دومين مفعل في Resend
+            "from": "onboarding@resend.dev", 
             "to": "carebridge.official0@gmail.com", 
             "subject": f"رسالة جديدة من {fullname}",
             "html": f"""
@@ -717,7 +685,7 @@ def send_contact_email(request):
     except Exception as e:
         return Response({"error": str(e)}, status=500)
 
-# طلب إعادة تعيين كلمة المرور
+
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def forgot_password(request):
@@ -737,7 +705,7 @@ def reset_password(request):
 
     email = serializer.validated_data['email']
     code = serializer.validated_data['code']
-    new_password = serializer.validated_data.get('new_password')  # ممكن يكون مش موجود
+    new_password = serializer.validated_data.get('new_password') 
 
     try:
         user = User.objects.get(email=email)
@@ -748,11 +716,11 @@ def reset_password(request):
         if not verification or not verification.is_valid():
             return Response({"detail": "رمز غير صالح أو منتهي"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # ✅ إذا ما في new_password → معناها لسه عم نتحقق
+  
         if not new_password:
             return Response({"detail": "تم التحقق من الرمز ✅ الرجاء إدخال كلمة المرور الجديدة"}, status=status.HTTP_200_OK)
 
-        # ✅ إذا في new_password → معناها بدنا نغير الباسورد
+
         verification.is_used = True
         verification.save()
         user.set_password(new_password)
@@ -762,7 +730,7 @@ def reset_password(request):
     except User.DoesNotExist:
         return Response({"detail": "المستخدم غير موجود"}, status=status.HTTP_404_NOT_FOUND)
 
-#  إعادة ارسال كود التاكيد
+
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def resend_verification_code(request):
@@ -773,11 +741,11 @@ def resend_verification_code(request):
     try:
         user = User.objects.get(email=email)
 
-        # إذا تم التحقق مسبقاً لا نرسل الكود
+
         if hasattr(user, "volunteer") and user.volunteer.is_verified:
             return Response({"detail": "تم بالفعل تأكيد البريد الإلكتروني."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # استدعاء الدالة الأصلية لإرسال كود جديد
+ 
         send_verification_code(user, purpose="verify")
 
         return Response({"detail": "تم إرسال رمز التحقق بنجاح."}, status=status.HTTP_200_OK)
@@ -787,7 +755,6 @@ def resend_verification_code(request):
     
 #  admin dashboard
 
-# تسجيل الدخول للادمنز 
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def login_admin(request):
@@ -805,7 +772,7 @@ def login_admin(request):
         "refresh": str(refresh),
     })
 
-#الاحصائيات
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_data(request):
@@ -851,28 +818,26 @@ def monthly_visits_report(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def monthly_overview(request):
-    # المسنين شهريًا
+
     elders = (
         Elder.objects.annotate(year=ExtractYear('created_at'), month=ExtractMonth('created_at'))
         .values('year', 'month')
         .annotate(total_elders=Count('id'))
     )
 
-    # المتطوعين شهريًا
     volunteers = (
         Volunteer.objects.annotate(year=ExtractYear('created_at'), month=ExtractMonth('created_at'))
         .values('year', 'month')
         .annotate(total_volunteers=Count('id'))
     )
 
-    # الزيارات شهريًا
     visits = (
         Visit.objects.annotate(year=ExtractYear('created_at'), month=ExtractMonth('created_at'))
         .values('year', 'month')
         .annotate(total_visits=Count('visit_id'))  # 👈 عدلتها
     )
 
-    # التقارير شهريًا (زيارات حالتها done)
+
     reports = (
         Visit.objects.filter(status='done')
         .annotate(year=ExtractYear('submitted_at'), month=ExtractMonth('submitted_at'))
@@ -880,18 +845,16 @@ def monthly_overview(request):
         .annotate(total_reports=Count('visit_id'))  # 👈 عدلتها
     )
 
-
-    # تحويل الـ QuerySets لقواميس
     elders_dict = {(e['year'], e['month']): e['total_elders'] for e in elders}
     volunteers_dict = {(v['year'], v['month']): v['total_volunteers'] for v in volunteers}
     visits_dict = {(v['year'], v['month']): v['total_visits'] for v in visits}
     reports_dict = {(r['year'], r['month']): r['total_reports'] for r in reports}
 
-    # نجمع كل الأشهر الموجودة بأي من الجداول
+
     months_years = set(list(elders_dict.keys()) + list(volunteers_dict.keys()) +
                        list(visits_dict.keys()) + list(reports_dict.keys()))
 
-    # بناء البيانات النهائية
+
     data = []
     for year, month in sorted(months_years):
         data.append({
@@ -923,7 +886,6 @@ def recent_volunteers(request):
 
     return Response(data)
 
-#  حالات المسنين 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def elders_health_status_stats(request):
@@ -950,63 +912,4 @@ def elders_health_status_stats(request):
     ]
 
     return Response(data)
-
-
-
-
-# # إرسال كود (للتسجيل أو إعادة تعيين كلمة المرور)
-# def send_verification_code(user, purpose="verify"):
-#     # كل الأكواد القديمة غير صالحة
-#     EmailVerificationCode.objects.filter(user=user, purpose=purpose, is_used=False).update(is_used=True)
-
-#     code = str(random.randint(100000, 999999))
-#     EmailVerificationCode.objects.create(user=user, code=code, purpose=purpose)
-
-#     if hasattr(user, 'volunteer') and user.volunteer:
-#         name = user.volunteer.name
-#     else:
-#         name = user.email.split('@')[0]  # fallback للاسم من الإيميل
-
-#     if purpose == "verify":
-#         subject = "رمز التحقق الخاص بك - CareBridge"
-#         greeting = f"مرحباً {name}،"
-#         instruction = "رمز التحقق الخاص بك هو:"
-#     elif purpose == "reset":
-#         subject = "رمز إعادة تعيين كلمة المرور - CareBridge"
-#         greeting = f"مرحباً {name}،"
-#         instruction = "رمز إعادة تعيين كلمة المرور الخاص بك هو:"
-#     else:
-#         subject = "رمز خاص بك - CareBridge"
-#         greeting = f"مرحباً {name}،"
-#         instruction = "رمزك الخاص هو:"
-
-#     html_content = f"""
-#     <div style="font-family: Arial, sans-serif; background-color: #f9f9f9;
-#         padding: 20px; border-radius: 10px; max-width: 500px; margin: auto; 
-#         text-align: center; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
-#         <h2 style="color: #4A90E2;">{subject}</h2>
-#         <p style="font-size: 16px; color: #333;">{greeting}</p>
-#         <p style="font-size: 18px; margin: 20px 0;">{instruction}</p>
-#         <div style="font-size: 24px; font-weight: bold; color: #ffffff;
-#             background-color: #4A90E2; padding: 10px 20px; border-radius: 8px;
-#             display: inline-block;">
-#             {code}
-#         </div>
-#         <p style="margin-top: 20px; font-size: 14px; color: #666;">
-#             إذا لم تطلب هذا الرمز، يمكنك تجاهل الرسالة.
-#         </p>
-#     </div>
-#     """
-
-#     try:
-#         send_mail(
-#             subject=subject,
-#             message=f"{instruction} {code}",
-#             from_email=settings.DEFAULT_FROM_EMAIL,
-#             recipient_list=[user.email],
-#             html_message=html_content,
-#             fail_silently=False,
-#         )
-#     except Exception as e:
-#         print("Email sending failed:", e)
 
