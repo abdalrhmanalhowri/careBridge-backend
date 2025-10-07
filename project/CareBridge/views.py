@@ -612,6 +612,25 @@ def notification_list(request):
 #         notification.save()
 #     serializer = NotificationSerializer(notification)
 #     return Response(serializer.data)
+   
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def send_notification_to_volunteer(request):
+    serializer = NotificationSerializer(data=request.data)
+
+    if serializer.is_valid():
+        volunteer_id = serializer.validated_data.get('volunteer').id
+
+        if not Volunteer.objects.filter(id=volunteer_id).exists():
+            return Response(
+                {"detail": "المتطوع غير موجود."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # قراءة الاشعار 
 @api_view(['POST'])

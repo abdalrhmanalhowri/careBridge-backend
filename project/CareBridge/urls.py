@@ -40,6 +40,8 @@ urlpatterns = [
     path('notifications/', views.notification_list, name='notification-list'),
     # path('notifications/<int:pk>/', views.notification_detail, name='notification-detail'),
     path('notifications/<int:pk>/read/', views.mark_notification_as_read, name='notification-mark-read'),
+        path('notifications/send/', views.send_notification_to_volunteer, name='send-notification'),
+
 
     # الإحصائيات
     path('data/', views.get_data, name='get-data'),
