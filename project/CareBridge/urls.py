@@ -17,7 +17,7 @@ urlpatterns = [
 
     # المتطوعين
     path('volunteers/', views.volunteer_list, name='volunteer-list'),
-    path('volunteers/me/', views.volunteer_detail, name='volunteer-detail'),
+    path('volunteers/<int:pk>/', views.volunteer_detail, name='volunteer-detail'),
     #  حذف المتطوع
     path("volunteers/<int:user_id>/delete/", views.delete_volunteer, name="delete-volunteer"),
 

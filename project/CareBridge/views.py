@@ -334,17 +334,22 @@ def volunteer_list(request):
 
 
 @api_view(['GET', 'PUT', 'PATCH', 'DELETE'])
-@permission_classes([IsAuthenticated])
-def volunteer_detail(request):
-    volunteer = Volunteer.objects.filter(user=request.user).first()
-    if not volunteer:
-        return Response({'message': 'لا يوجد متطوع مرتبط بهذا المستخدم.'}, status=status.HTTP_404_NOT_FOUND)
+@permission_classes([IsAuthenticated]) 
+def volunteer_detail(request, pk):
+    volunteer = get_object_or_404(Volunteer, pk=pk)
 
     if request.method == 'GET':
         serializer = VolunteerSerializer(volunteer)
         return Response(serializer.data)
 
-    elif request.method in ['PUT', 'PATCH']:
+    # باقي العمليات تحتاج تسجيل دخول
+    if not request.user.is_authenticated:
+        return Response(
+            {"detail": "يجب تسجيل الدخول لإجراء هذا الطلب."},
+            status=status.HTTP_401_UNAUTHORIZED
+        )
+
+    if request.method in ['PUT', 'PATCH']:
         partial = (request.method == 'PATCH')
         serializer = VolunteerSerializer(volunteer, data=request.data, partial=partial)
         if serializer.is_valid():
