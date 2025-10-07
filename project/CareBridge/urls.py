@@ -13,6 +13,7 @@ urlpatterns = [
     # كبار السن
     path('elders/', views.elder_list, name='elder-list'),
     path('elders/<int:pk>/', views.elder_detail, name='elder-detail'),
+    path('elders/delete-multiple/', views.delete_multiple_elders, name='delete_multiple_elders'),
 
     # المتطوعين
     path('volunteers/', views.volunteer_list, name='volunteer-list'),

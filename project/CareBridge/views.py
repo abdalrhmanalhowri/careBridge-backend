@@ -279,6 +279,21 @@ def elder_detail(request, pk):
         elder.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_multiple_elders(request):
+    ids = request.data.get("ids", [])
+    if not ids or not isinstance(ids, list):
+        return Response(
+            {"detail": "يجب إرسال قائمة من المعرفات (ids)."},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    deleted_count, _ = Elder.objects.filter(id__in=ids).delete()
+    return Response(
+        {"detail": f"تم حذف {deleted_count} مسن بنجاح."},
+        status=status.HTTP_200_OK
+    )
 
 #جدول المتطوعين
 @api_view(['GET'])
