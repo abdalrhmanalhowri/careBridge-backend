@@ -62,6 +62,7 @@ CORS_ALLOWED_ORIGINS = [
     "https://localhost:5173",  # لو تستخدم HTTPS محليًا
     "https://carebridge-nine.vercel.app",
     "https://carebridge-backend-bp1p.onrender.com",
+    "https://carebridge-dashboard.vercel.app",
 ]
 
 CORS_ALLOW_ALL_ORIGINS = False
